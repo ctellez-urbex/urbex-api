@@ -1,0 +1,144 @@
+service: urbex-api
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  
+  # Environment variables
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    DEBUG: false
+    
+  # IAM role permissions
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - cognito-idp:*
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+
+  # Lambda function configuration
+  memorySize: 512
+  timeout: 30
+  logRetentionInDays: 14
+
+functions:
+  api:
+    handler: app.main.handler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
+      - httpApi:
+          path: /
+          method: GET
+      - httpApi:
+          path: /health
+          method: GET
+      - httpApi:
+          path: /docs
+          method: GET
+      - httpApi:
+          path: /redoc
+          method: GET
+      - httpApi:
+          path: /openapi.json
+          method: GET
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+    layer:
+      name: python-deps
+      description: Python dependencies for urbex-api
+    noDeploy:
+      - coverage
+      - pytest
+      - pytest-*
+      - black
+      - isort
+      - flake8
+      - mypy
+      - pre-commit
+
+resources:
+  Resources:
+    # Cognito User Pool
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-${self:provider.stage}-user-pool
+        AutoVerifiedAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+        Schema:
+          - Name: email
+            AttributeDataType: String
+            Required: true
+            Mutable: true
+          - Name: given_name
+            AttributeDataType: String
+            Required: false
+            Mutable: true
+          - Name: family_name
+            AttributeDataType: String
+            Required: false
+            Mutable: true
+
+    # Cognito User Pool Client
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:service}-${self:provider.stage}-client
+        UserPoolId: !Ref CognitoUserPool
+        ExplicitAuthFlows:
+          - ALLOW_USER_PASSWORD_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        GenerateSecret: false
+
+    # API Gateway
+    ApiGatewayRestApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: ${self:service}-${self:provider.stage}-api
+        Description: Urbex API Gateway
+
+  Outputs:
+    UserPoolId:
+      Description: Cognito User Pool ID
+      Value: !Ref CognitoUserPool
+      Export:
+        Name: ${self:service}-${self:provider.stage}-user-pool-id
+
+    UserPoolClientId:
+      Description: Cognito User Pool Client ID
+      Value: !Ref CognitoUserPoolClient
+      Export:
+        Name: ${self:service}-${self:provider.stage}-user-pool-client-id
+
+    ApiGatewayRestApiId:
+      Description: API Gateway REST API ID
+      Value: !Ref ApiGatewayRestApi
+      Export:
+        Name: ${self:service}-${self:provider.stage}-api-gateway-id 

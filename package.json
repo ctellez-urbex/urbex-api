@@ -1,0 +1,37 @@
+{
+  "name": "urbex-api",
+  "version": "0.1.0",
+  "description": "FastAPI-based REST API for Urbex application with AWS Lambda deployment",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy:prod": "serverless deploy --stage prod",
+    "remove": "serverless remove",
+    "logs": "serverless logs -f api",
+    "test": "pytest",
+    "test:cov": "pytest --cov=app --cov-report=html",
+    "format": "black . && isort .",
+    "lint": "flake8 . && mypy .",
+    "pre-commit": "pre-commit run --all-files",
+    "install-hooks": "pre-commit install"
+  },
+  "keywords": [
+    "fastapi",
+    "python",
+    "aws",
+    "lambda",
+    "serverless",
+    "cognito",
+    "mailgun",
+    "rest-api"
+  ],
+  "author": "Urbex Team",
+  "license": "MIT",
+  "devDependencies": {
+    "serverless": "^3.38.0",
+    "serverless-python-requirements": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 
