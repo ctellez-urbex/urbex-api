@@ -36,7 +36,7 @@ urbex-api/
 
 ## 🛠️ Technology Stack
 
-- **Python 3.11+**: Latest stable Python version
+- **Python 3.13+**: Latest stable Python version
 - **FastAPI**: Modern web framework for APIs
 - **Pydantic**: Data validation and settings management
 - **AWS Lambda**: Serverless compute platform
