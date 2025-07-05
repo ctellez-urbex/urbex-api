@@ -13,6 +13,8 @@ provider:
     STAGE: ${self:provider.stage}
     REGION: ${self:provider.region}
     DEBUG: true
+    API_KEYS: ${env:API_KEYS, '[]'}
+    REQUIRE_API_KEY: ${env:REQUIRE_API_KEY, 'true'}
     
   # IAM role permissions
   iam:

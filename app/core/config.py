@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     algorithm: str = Field(default="HS256", description="JWT algorithm")
     access_token_expire_minutes: int = Field(default=30, description="Access token expiration in minutes")
     
+    # API Key settings
+    api_keys: list[str] = Field(default=[], description="List of valid API keys")
+    require_api_key: bool = Field(default=True, description="Whether API key is required for protected endpoints")
+    
     # CORS settings
     allowed_origins: list[str] = Field(default=["*"], description="Allowed CORS origins")
     allowed_methods: list[str] = Field(default=["*"], description="Allowed CORS methods")
