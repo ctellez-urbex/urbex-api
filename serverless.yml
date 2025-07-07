@@ -71,6 +71,7 @@ functions:
           path: /api/v1/contact
           method: POST
           cors: true
+          private: true
 
 
 
