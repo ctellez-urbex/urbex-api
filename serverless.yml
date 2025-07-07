@@ -7,9 +7,10 @@ provider:
   runtime: python3.11
   region: 'us-east-2'
   stage: ${opt:stage, 'prod'}
+
   apiGateway:
     apiKeys:
-      - urbex-api-key-${self:provider.stage}
+      - urbex-api-key-${self:provider.stage}  # Serverless crea ApiKey y UsagePlan automáticamente
 
   environment:
     STAGE: ${self:provider.stage}
@@ -47,7 +48,7 @@ functions:
           path: /api/v1/contact
           method: POST
           cors: true
-          private: true
+          private: true  # Requiere API Key
 
 plugins:
   - serverless-python-requirements
@@ -110,34 +111,3 @@ resources:
           - ALLOW_USER_PASSWORD_AUTH
           - ALLOW_REFRESH_TOKEN_AUTH
         GenerateSecret: false
-
-    UrbexApiUsagePlan:
-      Type: AWS::ApiGateway::UsagePlan
-      Properties:
-        UsagePlanName: urbex-api-usage-plan-${self:provider.stage}
-        Description: Usage plan for urbex-api-${self:provider.stage}
-        ApiStages:
-          - ApiId:
-              Ref: ApiGatewayRestApi
-            Stage: ${self:provider.stage}
-        Throttle:
-          RateLimit: 10
-          BurstLimit: 5
-        Quota:
-          Limit: 10000
-          Period: MONTH
-
-    UrbexApiUsagePlanKey:
-      Type: AWS::ApiGateway::UsagePlanKey
-      Properties:
-        KeyId:
-          Ref: UrbexApiKey
-        KeyType: API_KEY
-        UsagePlanId:
-          Ref: UrbexApiUsagePlan
-
-    UrbexApiKey:
-      Type: AWS::ApiGateway::ApiKey
-      Properties:
-        Name: urbex-api-key-${self:provider.stage}
-        Enabled: true
