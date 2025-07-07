@@ -145,6 +145,16 @@ resources:
       Properties:
         Name: ${self:service}-${self:provider.stage}-api
         Description: Urbex API Gateway
+    ApiGatewayRestApiKey:
+      Type: AWS::ApiGateway::ApiKey
+      Properties:
+        Name: ${self:service}-${self:provider.stage}-api-key
+        Description: Urbex API Key
+        Enabled: true
+        StageKeys:
+          - RestApiId: !Ref ApiGatewayRestApi
+            Stage: !Ref Stage
+        Value: ${self:custom.apiKeys.${self:provider.stage}}
 
   Outputs:
     UserPoolId:
