@@ -61,15 +61,8 @@ functions:
       - httpApi:
           path: /api/v1/contact
           method: POST
-          authorizer:
-            name: apiKeyAuthorizer
-            type: apiKey
-            identitySource: $request.header.x-api-key
 
-  apiKeyAuthorizer:
-    handler: app.authorizer.handler
-    environment:
-      API_KEYS: ${env:API_KEYS, '["urbex-prod-key-pPK5CrbFX7Ue9u3gWvJc-A","urbex-dev-key-pOV9-fe9HSKdI3tfogdUIw","urbex-test-key-vjtyZHsCM2VpR_iGptzRxw"]'}
+
 
 plugins:
   - serverless-python-requirements
