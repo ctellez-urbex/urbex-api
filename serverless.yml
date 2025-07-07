@@ -5,7 +5,7 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: python3.11
-  region: ${opt:region, 'us-east-2'}
+  region: 'us-east-2'
   stage: ${opt:stage, 'prod'}
 
     # Environment variables
@@ -37,7 +37,7 @@ provider:
 
   apiGateway:
     apiKeys:
-      - urbex-api-key-prod
+      - rbex-api-key-${self:provider.stage}
 
 
   # Lambda function configuration
@@ -49,11 +49,6 @@ functions:
   api:
     handler: app.main.handler
     events:
-      - http:
-          path: /docs
-          method: GET
-          cors: true
-          private: true
       - http:
           path: /api/v1/contact
           method: POST
@@ -125,29 +120,3 @@ resources:
           - ALLOW_USER_PASSWORD_AUTH
           - ALLOW_REFRESH_TOKEN_AUTH
         GenerateSecret: false
-
-    # API Gateway
-    ApiGatewayRestApi:
-      Type: AWS::ApiGateway::RestApi
-      Properties:
-        Name: ${self:service}-${self:provider.stage}-api
-        Description: Urbex API Gateway
-
-  Outputs:
-    UserPoolId:
-      Description: Cognito User Pool ID
-      Value: !Ref CognitoUserPool
-      Export:
-        Name: ${self:service}-${self:provider.stage}-user-pool-id
-
-    UserPoolClientId:
-      Description: Cognito User Pool Client ID
-      Value: !Ref CognitoUserPoolClient
-      Export:
-        Name: ${self:service}-${self:provider.stage}-user-pool-client-id
-
-    ApiGatewayRestApiId:
-      Description: API Gateway REST API ID
-      Value: !Ref ApiGatewayRestApi
-      Export:
-        Name: ${self:service}-${self:provider.stage}-api-gateway-id
