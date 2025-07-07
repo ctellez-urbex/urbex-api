@@ -93,7 +93,6 @@ Required environment variables:
 - `MAILGUN_DOMAIN`: Mailgun domain
 - `ADMIN_EMAIL`: Admin email for contact form notifications
 - `SECRET_KEY`: JWT secret key
-- `API_KEYS`: List of valid API keys for protected endpoints
 
 ### 4. Run the Application
 
@@ -291,31 +290,7 @@ Response:
 
 ## 🔐 Authentication
 
-### API Key Authentication
 
-Protected endpoints require a valid API key in the x-api-key header. The validation is performed at the application level within the Lambda function.
-
-```http
-x-api-key: your-api-key-here
-```
-
-**Configuration:**
-- Set `API_KEYS` environment variable with a list of valid API keys
-- FastAPI validates the x-api-key header using dependency injection
-- Protected endpoints: `/api/v1/contact/`
-
-**Example:**
-```bash
-curl -X POST "https://your-api.com/api/v1/contact/" \
-  -H "x-api-key: your-api-key-here" \
-  -H "Content-Type: application/json" \
-  -d '{"full_name": "John Doe", "email": "john@example.com", "message": "Hello"}'
-```
-
-**Application-Level Authorization:**
-- The `x-api-key` header is validated within the FastAPI application
-- Invalid or missing API keys return 401 Unauthorized
-- Valid API keys allow the request to be processed
 
 ### JWT Authentication Flow
 
@@ -358,8 +333,6 @@ The Serverless Framework creates:
 | `MAILGUN_DOMAIN` | Mailgun domain | Required |
 | `ADMIN_EMAIL` | Admin email for contact notifications | Required |
 | `SECRET_KEY` | JWT secret key | Required |
-| `API_KEYS` | List of valid API keys for x-api-key header | `[]` |
-| `REQUIRE_API_KEY` | Enable API key validation | `true` |
 
 ### AWS Configuration
 

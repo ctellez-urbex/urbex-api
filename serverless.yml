@@ -13,8 +13,6 @@ provider:
     STAGE: ${self:provider.stage}
     REGION: ${self:provider.region}
     DEBUG: true
-    API_KEYS: ${env:API_KEYS, '["urbex-prod-key-pPK5CrbFX7Ue9u3gWvJc-A","urbex-dev-key-pOV9-fe9HSKdI3tfogdUIw","urbex-test-key-vjtyZHsCM2VpR_iGptzRxw"]'}
-    REQUIRE_API_KEY: ${env:REQUIRE_API_KEY, 'true'}
     
   # IAM role permissions
   iam:

@@ -40,42 +40,43 @@ async def register_user(user_data: UserRegister) -> AuthResponse:
     Returns:
         Registration response
     """
-    try:
-        # Prepare user attributes
-        attributes = {}
-        if user_data.first_name:
-            attributes["given_name"] = user_data.first_name
-        if user_data.last_name:
-            attributes["family_name"] = user_data.last_name
+    # Prepare user attributes
+    attributes = {}
+    if user_data.first_name:
+        attributes["given_name"] = user_data.first_name
+    if user_data.last_name:
+        attributes["family_name"] = user_data.last_name
 
-        # Register user with Cognito
+    # Register user with Cognito
+    result = None
+    try:
         result = cognito_service.register_user(
             username=user_data.username,
             email=user_data.email,
             password=user_data.password,
             attributes=attributes,
         )
-
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to register user",
-            )
-
-        # Send welcome email
-        mailgun_service.send_welcome_email(user_data.email, user_data.username)
-
-        return AuthResponse(
-            success=True,
-            message="User registered successfully. Please check your email for confirmation.",
-            data={"username": user_data.username},
-        )
-
     except Exception as e:
+        # Only unexpected errors are 500
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Registration failed: {str(e)}",
         )
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to register user",
+        )
+
+    # Send welcome email
+    mailgun_service.send_welcome_email(user_data.email, user_data.username)
+
+    return AuthResponse(
+        success=True,
+        message="User registered successfully. Please check your email for confirmation.",
+        data={"username": user_data.username},
+    )
 
 
 @router.post("/confirm", response_model=AuthResponse)
@@ -89,29 +90,30 @@ async def confirm_registration(confirm_data: UserConfirm) -> AuthResponse:
     Returns:
         Confirmation response
     """
+    success = None
     try:
         success = cognito_service.confirm_registration(
             username=confirm_data.username,
             confirmation_code=confirm_data.confirmation_code,
         )
-
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid confirmation code",
-            )
-
-        return AuthResponse(
-            success=True,
-            message="User confirmed successfully",
-            data={"username": confirm_data.username},
-        )
-
     except Exception as e:
+        # Only unexpected errors are 500
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Confirmation failed: {str(e)}",
         )
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid confirmation code",
+        )
+
+    return AuthResponse(
+        success=True,
+        message="User confirmed successfully",
+        data={"username": confirm_data.username},
+    )
 
 
 @router.post("/login", response_model=TokenResponse)

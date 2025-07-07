@@ -11,6 +11,9 @@ from unittest.mock import Mock
 from app.main import app
 
 
+
+
+
 @pytest.fixture
 def client() -> TestClient:
     """Create a test client for the FastAPI application."""
@@ -58,4 +61,7 @@ def sample_token_response() -> dict:
         "token_type": "bearer",
         "expires_in": 3600,
         "refresh_token": "test_refresh_token",
-    } 
+    }
+
+
+ 

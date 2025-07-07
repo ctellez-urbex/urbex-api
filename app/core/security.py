@@ -10,7 +10,7 @@ from typing import Any, Optional
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.core.config import settings
@@ -136,54 +136,4 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     return payload
 
 
-def validate_api_key(api_key: str) -> bool:
-    """
-    Validate API key against configured keys.
-    
-    Args:
-        api_key: API key to validate
-        
-    Returns:
-        True if valid, False otherwise
-    """
-    if not settings.require_api_key:
-        return True
-    
-    if not settings.api_keys:
-        # If no API keys are configured, allow all requests
-        return True
-    
-    return api_key in settings.api_keys
-
-
-def require_api_key(x_api_key: Optional[str] = Header(None, alias="x-api-key")) -> bool:
-    """
-    Dependency to validate API key from x-api-key header.
-    
-    Args:
-        x_api_key: API key from x-api-key header
-        
-    Returns:
-        True if valid
-        
-    Raises:
-        HTTPException: If API key is invalid or missing
-    """
-    if not settings.require_api_key:
-        return True
-    
-    if not x_api_key:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="x-api-key header required",
-            headers={"WWW-Authenticate": "ApiKey"},
-        )
-    
-    if not validate_api_key(x_api_key):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API key",
-            headers={"WWW-Authenticate": "ApiKey"},
-        )
-    
-    return True 
+ 

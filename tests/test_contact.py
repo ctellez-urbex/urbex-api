@@ -18,14 +18,14 @@ class TestContactEndpoints:
         with patch("app.api.v1.contact.mailgun_service") as mock_mailgun:
             # Mock successful email sending
             mock_mailgun.send_contact_form_email.return_value = True
-            
+
             contact_data = {
                 "full_name": "Juan Pérez",
                 "email": "juan.perez@example.com",
                 "phone": "+1234567890",
                 "message": "Hola, me gustaría obtener más información sobre sus servicios."
             }
-            
+
             response = client.post("/api/v1/contact/", json=contact_data)
             
             assert response.status_code == status.HTTP_200_OK

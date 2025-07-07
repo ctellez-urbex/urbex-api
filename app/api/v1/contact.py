@@ -5,11 +5,10 @@ This module provides contact form functionality for
 landing page integration.
 """
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status
 from datetime import datetime
 
 from app.core.config import settings
-from app.core.security import require_api_key
 from app.models.contact import ContactForm, ContactResponse
 from app.services.mailgun import mailgun_service
 
@@ -17,10 +16,7 @@ router = APIRouter(prefix="/contact", tags=["Contact"])
 
 
 @router.post("/", response_model=ContactResponse)
-async def submit_contact_form(
-    contact_data: ContactForm,
-    _: bool = Depends(require_api_key)
-) -> ContactResponse:
+async def submit_contact_form(contact_data: ContactForm) -> ContactResponse:
     """
     Submit contact form from landing page.
     
