@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov format lint pre-commit clean run run-docker deploy deploy-prod remove logs
+.PHONY: help install install-dev test test-cov format lint pre-commit clean run run-docker deploy deploy-prod remove logs setup-env
 
 help: ## Show this help message
 	@echo "Available commands:"
@@ -58,6 +58,9 @@ logs: ## View AWS Lambda logs
 
 setup: install-dev ## Setup development environment
 	@echo "Development environment setup complete!"
+
+setup-env: ## Setup environment variables with API keys
+	@./setup-env.sh
 
 ci: format lint test ## Run CI checks
 	@echo "CI checks completed successfully!" 
