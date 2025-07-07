@@ -37,7 +37,7 @@ provider:
 
   apiGateway:
     apiKeys:
-      - rbex-api-key-${self:provider.stage}
+      - urbex-api-key-${self:provider.stage}
 
 
   # Lambda function configuration
