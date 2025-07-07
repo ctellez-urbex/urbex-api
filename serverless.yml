@@ -11,8 +11,18 @@ provider:
   # Environment variables
   environment:
     STAGE: ${self:provider.stage}
-    REGION: ${self:provider.region}
     DEBUG: true
+    MAILGUN_API_KEY: ${env:MAILGUN_API_KEY}
+    MAILGUN_DOMAIN: ${env:MAILGUN_DOMAIN}
+    ADMIN_EMAIL: ${env:ADMIN_EMAIL}
+    AWS_REGION: ${env:AWS_REGION}
+    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
+    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}
+
+    COGNITO_REGION: ${env:REGION}
+    
     
   # IAM role permissions
   iam:

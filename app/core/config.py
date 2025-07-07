@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # Cognito settings
     cognito_user_pool_id: Optional[str] = Field(default=None, description="Cognito user pool ID")
     cognito_client_id: Optional[str] = Field(default=None, description="Cognito client ID")
-    cognito_client_secret: Optional[str] = Field(default=None, description="Cognito client secret")
+    cognito_client_secret: Optional[str] = Field(default=None, description="Cognito client secret (optional for public clients)")
     cognito_region: Optional[str] = Field(default=None, description="Cognito region")
     
     # Mailgun settings
