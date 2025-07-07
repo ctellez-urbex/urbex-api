@@ -44,26 +44,31 @@ functions:
   api:
     handler: app.main.handler
     events:
-      - http:
+      - httpApi:
           path: /{proxy+}
           method: ANY
-      - http:
+      - httpApi:
           path: /
           method: GET
-      - http:
+      - httpApi:
           path: /health
           method: GET
-      - http:
+      - httpApi:
           path: /docs
           method: GET
-      - http:
+      - httpApi:
           path: /redoc
           method: GET
-      - http:
+      - httpApi:
           path: /openapi.json
           method: GET
       - http:
           path: /api/v1/contact
+          method: POST
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/login
           method: POST
           cors: true
           private: true
