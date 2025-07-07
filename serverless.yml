@@ -67,8 +67,34 @@ functions:
           method: POST
           cors: true
           private: true
+      # Auth endpoints
       - http:
-          path: /api/v1/login
+          path: /api/v1/auth/register
+          method: POST
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/auth/confirm
+          method: POST
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/auth/login
+          method: POST
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/auth/refresh
+          method: POST
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/auth/me
+          method: GET
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/auth/logout
           method: POST
           cors: true
           private: true

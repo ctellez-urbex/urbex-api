@@ -37,23 +37,33 @@ async def register_user(user_data: UserRegister) -> AuthResponse:
     Returns:
         Registration response
     """
+    print(f"🔍 Register endpoint called with username: {user_data.username}")
+
     # Prepare user attributes
     attributes = {}
     if user_data.first_name:
         attributes["given_name"] = user_data.first_name
     if user_data.last_name:
         attributes["family_name"] = user_data.last_name
+    if user_data.email:
+        attributes["email"] = user_data.email
+
+    print(f"🔍 Prepared attributes: {attributes}")
 
     # Register user with Cognito
     result = None
     try:
+        print("🔍 Calling cognito_service.register_user...")
         result = cognito_service.register_user(
             username=user_data.username,
             email=user_data.email,
             password=user_data.password,
             attributes=attributes,
         )
+        print(f"🔍 Cognito registration result: {result}")
     except Exception as e:
+        print(f"❌ Registration exception: {e}")
+        print(f"❌ Exception type: {type(e).__name__}")
         # Only unexpected errors are 500
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -66,8 +76,16 @@ async def register_user(user_data: UserRegister) -> AuthResponse:
             detail="Failed to register user",
         )
 
-    # Send welcome email
-    mailgun_service.send_welcome_email(user_data.email, user_data.username)
+    # Send welcome email (don't fail if email fails)
+    try:
+        print("🔍 Sending welcome email...")
+        email_sent = mailgun_service.send_welcome_email(
+            user_data.email, user_data.username
+        )
+        print(f"🔍 Welcome email sent: {email_sent}")
+    except Exception as e:
+        print(f"⚠️ Warning: Failed to send welcome email: {e}")
+        # Don't fail the registration if email fails
 
     return AuthResponse(
         success=True,
@@ -125,13 +143,17 @@ async def login_user(login_data: UserLogin) -> TokenResponse:
         Token response with access and refresh tokens
     """
     try:
+        print(f"🔍 Attempting login for user: {login_data.username}")
+
         # Authenticate with Cognito
         result = cognito_service.authenticate_user(
             username=login_data.username,
             password=login_data.password,
         )
+        print(f"🔍 Cognito response: {result}")
 
         if not result:
+            print(f"❌ Authentication failed for user: {login_data.username}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials",

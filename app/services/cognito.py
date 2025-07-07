@@ -43,6 +43,12 @@ class CognitoService:
             Authentication result or None if failed
         """
         try:
+            print(f"🔍 Cognito config - User Pool ID: {self.user_pool_id}")
+            print(f"🔍 Cognito config - Client ID: {self.client_id}")
+            print(
+                f"🔍 Cognito config - Region: {settings.cognito_region or settings.aws_region}"
+            )
+
             auth_params = {
                 "USERNAME": username,
                 "PASSWORD": password,
@@ -50,6 +56,9 @@ class CognitoService:
 
             if self.client_secret:
                 auth_params["SECRET_HASH"] = self._get_secret_hash(username)
+                print("🔍 Using client secret for authentication")
+
+            print(f"🔍 Auth parameters: {auth_params}")
 
             response = self.client.initiate_auth(
                 ClientId=self.client_id,
@@ -57,9 +66,12 @@ class CognitoService:
                 AuthParameters=auth_params,
             )
 
+            print(f"✅ Authentication successful for user: {username}")
             return response
         except ClientError as e:
-            print(f"Authentication error: {e}")
+            print(f"❌ Authentication error: {e}")
+            print(f"❌ Error code: {e.response['Error']['Code']}")
+            print(f"❌ Error message: {e.response['Error']['Message']}")
             return None
 
     def register_user(

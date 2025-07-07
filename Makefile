@@ -71,5 +71,8 @@ setup-aws: ## Setup AWS credentials
 deploy-check: check-env ## Check environment before deployment
 	@echo "Environment check completed. Run 'make deploy-prod' to deploy."
 
+test-apis: ## Test API endpoints
+	@./test-apis.sh
+
 ci: format lint test ## Run CI checks
 	@echo "CI checks completed successfully!"

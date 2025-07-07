@@ -53,6 +53,12 @@ def create_app() -> FastAPI:
         request: Request, exc: Exception
     ) -> JSONResponse:
         """Global exception handler."""
+        print(f"❌ Global exception handler caught: {exc}")
+        print(f"❌ Exception type: {type(exc).__name__}")
+        import traceback
+
+        print(f"❌ Traceback: {traceback.format_exc()}")
+
         return JSONResponse(
             status_code=500,
             content={
