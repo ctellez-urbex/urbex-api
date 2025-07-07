@@ -23,10 +23,10 @@ class Settings(BaseSettings):
     host: str = Field(default="0.0.0.0", description="Server host")
     port: int = Field(default=8000, description="Server port")
     
-    # AWS settings
-    aws_region: str = Field(default="us-east-1", description="AWS region")
-    aws_access_key_id: Optional[str] = Field(default=None, description="AWS access key ID")
-    aws_secret_access_key: Optional[str] = Field(default=None, description="AWS secret access key")
+    # AWS settings - These are automatically provided by Lambda runtime
+    aws_region: str = Field(default="us-east-1", description="AWS region (auto-provided by Lambda)")
+    aws_access_key_id: Optional[str] = Field(default=None, description="AWS access key ID (auto-provided by Lambda)")
+    aws_secret_access_key: Optional[str] = Field(default=None, description="AWS secret access key (auto-provided by Lambda)")
     
     # Cognito settings
     cognito_user_pool_id: Optional[str] = Field(default=None, description="Cognito user pool ID")
