@@ -293,7 +293,7 @@ Response:
 
 ### API Key Authentication
 
-Protected endpoints require a valid API key in the x-api-key header:
+Protected endpoints require a valid API key in the x-api-key header. The API Gateway validates the API key before the request reaches the Lambda function.
 
 ```http
 x-api-key: your-api-key-here
@@ -301,7 +301,7 @@ x-api-key: your-api-key-here
 
 **Configuration:**
 - Set `API_KEYS` environment variable with a list of valid API keys
-- Set `REQUIRE_API_KEY=true` to enable API key validation
+- API Gateway uses a Lambda authorizer to validate the x-api-key header
 - Protected endpoints: `/api/v1/contact/`
 
 **Example:**
@@ -311,6 +311,11 @@ curl -X POST "https://your-api.com/api/v1/contact/" \
   -H "Content-Type: application/json" \
   -d '{"full_name": "John Doe", "email": "john@example.com", "message": "Hello"}'
 ```
+
+**API Gateway Authorization:**
+- The `x-api-key` header is validated at the API Gateway level
+- Invalid or missing API keys return 401 Unauthorized
+- Valid API keys allow the request to proceed to the Lambda function
 
 ### JWT Authentication Flow
 
