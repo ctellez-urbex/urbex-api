@@ -8,10 +8,10 @@ password hashing, and API key validation.
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.core.config import settings
 
@@ -25,11 +25,11 @@ security = HTTPBearer()
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Verify a plain password against its hash.
-    
+
     Args:
         plain_password: The plain text password
         hashed_password: The hashed password to verify against
-        
+
     Returns:
         True if password matches, False otherwise
     """
@@ -39,10 +39,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     """
     Hash a password using bcrypt.
-    
+
     Args:
         password: The plain text password to hash
-        
+
     Returns:
         The hashed password
     """
@@ -54,11 +54,11 @@ def create_access_token(
 ) -> str:
     """
     Create a JWT access token.
-    
+
     Args:
         data: The data to encode in the token
         expires_delta: Optional expiration time delta
-        
+
     Returns:
         The encoded JWT token
     """
@@ -69,7 +69,7 @@ def create_access_token(
         expire = datetime.utcnow() + timedelta(
             minutes=settings.access_token_expire_minutes
         )
-    
+
     to_encode.update({"exp": expire})
     # Note: In a real implementation, you would use a proper JWT library
     # This is a simplified version for demonstration
@@ -79,10 +79,10 @@ def create_access_token(
 def verify_token(token: str) -> Optional[dict[str, Any]]:
     """
     Verify and decode a JWT token.
-    
+
     Args:
         token: The JWT token to verify
-        
+
     Returns:
         The decoded token payload or None if invalid
     """
@@ -97,10 +97,10 @@ def verify_token(token: str) -> Optional[dict[str, Any]]:
 def get_token_expiration(token: str) -> Optional[datetime]:
     """
     Get the expiration time of a JWT token.
-    
+
     Args:
         token: The JWT token
-        
+
     Returns:
         The expiration datetime or None if invalid
     """
@@ -110,30 +110,29 @@ def get_token_expiration(token: str) -> Optional[datetime]:
     return None
 
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> dict:
     """
     Get current user from JWT token.
-    
+
     Args:
         credentials: HTTP authorization credentials
-        
+
     Returns:
         Current user data
-        
+
     Raises:
         HTTPException: If token is invalid
     """
     token = credentials.credentials
     payload = verify_token(token)
-    
+
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return payload
-
-
- 

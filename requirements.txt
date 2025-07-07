@@ -39,4 +39,4 @@ mypy==1.7.1
 pre-commit==3.6.0
 
 # Development tools
-pytest-mock==3.12.0 
+pytest-mock==3.12.0

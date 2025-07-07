@@ -10,4 +10,4 @@ This package provides a clean architecture implementation with:
 """
 
 __version__ = "0.1.0"
-__author__ = "Urbex Team" 
+__author__ = "Urbex Team"

@@ -6,8 +6,9 @@ for sending transactional emails.
 """
 
 from datetime import datetime
-import requests
 from typing import Any, Dict, List, Optional
+
+import requests
 
 from app.core.config import settings
 
@@ -36,7 +37,7 @@ class MailgunService:
     ) -> Optional[Dict[str, Any]]:
         """
         Send an email using Mailgun.
-        
+
         Args:
             to_emails: List of recipient email addresses
             subject: Email subject
@@ -47,7 +48,7 @@ class MailgunService:
             bcc: BCC recipients
             reply_to: Reply-to email address
             custom_data: Custom variables for templates
-            
+
         Returns:
             API response or None if failed
         """
@@ -95,14 +96,14 @@ class MailgunService:
     ) -> Optional[Dict[str, Any]]:
         """
         Send an email using a Mailgun template.
-        
+
         Args:
             to_emails: List of recipient email addresses
             template_name: Name of the template
             template_variables: Variables for template
             subject: Email subject (can be in template)
             from_email: Sender email
-            
+
         Returns:
             API response or None if failed
         """
@@ -135,11 +136,11 @@ class MailgunService:
     def send_welcome_email(self, email: str, username: str) -> bool:
         """
         Send a welcome email to new users.
-        
+
         Args:
             email: User's email address
             username: User's username
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -153,29 +154,29 @@ class MailgunService:
         </body>
         </html>
         """
-        
+
         result = self.send_email(
             to_emails=[email],
             subject=subject,
             html=html_content,
         )
-        
+
         return result is not None
 
     def send_password_reset_email(self, email: str, reset_token: str) -> bool:
         """
         Send a password reset email.
-        
+
         Args:
             email: User's email address
             reset_token: Password reset token
-            
+
         Returns:
             True if successful, False otherwise
         """
         subject = "Password Reset Request"
         reset_url = f"https://your-app.com/reset-password?token={reset_token}"
-        
+
         html_content = f"""
         <html>
         <body>
@@ -188,28 +189,28 @@ class MailgunService:
         </body>
         </html>
         """
-        
+
         result = self.send_email(
             to_emails=[email],
             subject=subject,
             html=html_content,
         )
-        
+
         return result is not None
 
     def send_verification_email(self, email: str, verification_code: str) -> bool:
         """
         Send an email verification code.
-        
+
         Args:
             email: User's email address
             verification_code: Verification code
-            
+
         Returns:
             True if successful, False otherwise
         """
         subject = "Email Verification"
-        
+
         html_content = f"""
         <html>
         <body>
@@ -221,45 +222,40 @@ class MailgunService:
         </body>
         </html>
         """
-        
+
         result = self.send_email(
             to_emails=[email],
             subject=subject,
             html=html_content,
         )
-        
+
         return result is not None
 
     def send_contact_form_email(
-        self, 
-        full_name: str, 
-        email: str, 
-        phone: str, 
-        message: str,
-        admin_email: str
+        self, full_name: str, email: str, phone: str, message: str, admin_email: str
     ) -> bool:
         """
         Send contact form notification to admin.
-        
+
         Args:
             full_name: Contact person's full name
             email: Contact person's email
             phone: Contact person's phone
             message: Contact message
             admin_email: Admin email to receive notification
-            
+
         Returns:
             True if successful, False otherwise
         """
         try:
             subject = f"Nuevo mensaje de contacto de {full_name}"
-            
+
             html_content = f"""
             <html>
             <body>
                 <h1>Nuevo Mensaje de Contacto</h1>
                 <p>Has recibido un nuevo mensaje de contacto desde la landing page:</p>
-                
+
                 <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
                     <h2>Información del Contacto:</h2>
                     <p><strong>Nombre completo:</strong> {full_name}</p>
@@ -270,15 +266,15 @@ class MailgunService:
                         {message.replace(chr(10), '<br>')}
                     </div>
                 </div>
-                
+
                 <p><strong>Fecha:</strong> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</p>
-                
+
                 <hr>
                 <p><em>Este mensaje fue enviado automáticamente desde el formulario de contacto de Urbex.</em></p>
             </body>
             </html>
             """
-            
+
             # Enviar email al admin
             admin_result = self.send_email(
                 to_emails=[admin_email],
@@ -286,11 +282,11 @@ class MailgunService:
                 html=html_content,
                 reply_to=email,  # Para que el admin pueda responder directamente
             )
-            
+
             if not admin_result:
                 print(f"Failed to send admin notification to {admin_email}")
                 return False
-            
+
             # Enviar confirmación al usuario
             user_subject = "Gracias por contactarnos - Urbex"
             user_html_content = f"""
@@ -299,7 +295,7 @@ class MailgunService:
                 <h1>¡Gracias por contactarnos!</h1>
                 <p>Hola {full_name},</p>
                 <p>Hemos recibido tu mensaje y nos pondremos en contacto contigo pronto.</p>
-                
+
                 <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
                     <h3>Resumen de tu mensaje:</h3>
                     <p><strong>Email:</strong> {email}</p>
@@ -309,30 +305,30 @@ class MailgunService:
                         {message[:200]}{'...' if len(message) > 200 else ''}
                     </div>
                 </div>
-                
+
                 <p>Te responderemos en las próximas 24 horas.</p>
                 <p>Saludos,<br>El equipo de Urbex</p>
             </body>
             </html>
             """
-            
+
             user_result = self.send_email(
                 to_emails=[email],
                 subject=user_subject,
                 html=user_html_content,
             )
-            
+
             if not user_result:
                 print(f"Failed to send confirmation email to {email}")
                 # No fallamos completamente si solo falla la confirmación
                 return True
-            
+
             return True
-            
+
         except Exception as e:
             print(f"Error in send_contact_form_email: {str(e)}")
             return False
 
 
 # Global Mailgun service instance
-mailgun_service = MailgunService() 
+mailgun_service = MailgunService()

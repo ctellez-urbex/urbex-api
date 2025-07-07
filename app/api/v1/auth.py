@@ -5,14 +5,11 @@ This module provides authentication-related endpoints including
 login, registration, and token management with Cognito integration.
 """
 
-from datetime import datetime, timedelta
-from typing import Any
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer
 
-from app.core.config import settings
-from app.core.security import create_access_token, verify_token
 from app.models.auth import (
     AuthResponse,
     RefreshToken,
@@ -33,10 +30,10 @@ security = HTTPBearer()
 async def register_user(user_data: UserRegister) -> AuthResponse:
     """
     Register a new user with Cognito.
-    
+
     Args:
         user_data: User registration data
-        
+
     Returns:
         Registration response
     """
@@ -83,10 +80,10 @@ async def register_user(user_data: UserRegister) -> AuthResponse:
 async def confirm_registration(confirm_data: UserConfirm) -> AuthResponse:
     """
     Confirm user registration with verification code.
-    
+
     Args:
         confirm_data: Confirmation data
-        
+
     Returns:
         Confirmation response
     """
@@ -120,10 +117,10 @@ async def confirm_registration(confirm_data: UserConfirm) -> AuthResponse:
 async def login_user(login_data: UserLogin) -> TokenResponse:
     """
     Authenticate user and return access token.
-    
+
     Args:
         login_data: Login credentials
-        
+
     Returns:
         Token response with access and refresh tokens
     """
@@ -172,10 +169,10 @@ async def login_user(login_data: UserLogin) -> TokenResponse:
 async def refresh_token(refresh_data: RefreshToken) -> TokenResponse:
     """
     Refresh access token using refresh token.
-    
+
     Args:
         refresh_data: Refresh token data
-        
+
     Returns:
         New token response
     """
@@ -217,10 +214,10 @@ async def refresh_token(refresh_data: RefreshToken) -> TokenResponse:
 async def get_current_user(token: str = Depends(security)) -> UserInfo:
     """
     Get current user information.
-    
+
     Args:
         token: Bearer token
-        
+
     Returns:
         Current user information
     """
@@ -237,7 +234,7 @@ async def get_current_user(token: str = Depends(security)) -> UserInfo:
         # Extract user attributes
         user_attributes = result.get("UserAttributes", [])
         user_info = {}
-        
+
         for attr in user_attributes:
             name = attr.get("Name")
             value = attr.get("Value")
@@ -273,10 +270,10 @@ async def get_current_user(token: str = Depends(security)) -> UserInfo:
 async def logout_user(token: str = Depends(security)) -> AuthResponse:
     """
     Logout user (invalidate token).
-    
+
     Args:
         token: Bearer token
-        
+
     Returns:
         Logout response
     """
@@ -292,4 +289,4 @@ async def logout_user(token: str = Depends(security)) -> AuthResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Logout failed: {str(e)}",
-        ) 
+        )

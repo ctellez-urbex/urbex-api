@@ -48,7 +48,7 @@ deploy: ## Deploy to AWS Lambda (dev)
 	serverless deploy
 
 deploy-prod: ## Deploy to AWS Lambda (production)
-	serverless deploy --stage prod
+	./deploy-with-env.sh
 
 remove: ## Remove AWS Lambda deployment
 	serverless remove
@@ -62,5 +62,14 @@ setup: install-dev ## Setup development environment
 setup-env: ## Setup environment variables with API keys
 	@./setup-env.sh
 
+check-env: ## Check environment variables configuration
+	@./check-env.sh
+
+setup-aws: ## Setup AWS credentials
+	@./setup-aws.sh
+
+deploy-check: check-env ## Check environment before deployment
+	@echo "Environment check completed. Run 'make deploy-prod' to deploy."
+
 ci: format lint test ## Run CI checks
-	@echo "CI checks completed successfully!" 
+	@echo "CI checks completed successfully!"

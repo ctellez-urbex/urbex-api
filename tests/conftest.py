@@ -4,14 +4,12 @@ Pytest configuration and fixtures.
 This module provides common fixtures and configuration for all tests.
 """
 
-import pytest
-from fastapi.testclient import TestClient
 from unittest.mock import Mock
 
+import pytest
+from fastapi.testclient import TestClient
+
 from app.main import app
-
-
-
 
 
 @pytest.fixture
@@ -62,6 +60,3 @@ def sample_token_response() -> dict:
         "expires_in": 3600,
         "refresh_token": "test_refresh_token",
     }
-
-
- 

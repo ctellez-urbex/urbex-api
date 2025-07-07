@@ -7,19 +7,19 @@ provider:
   runtime: python3.11
   region: ${opt:region, 'us-east-2'}
   stage: ${opt:stage, 'prod'}
-  
+
     # Environment variables
   environment:
     STAGE: ${self:provider.stage}
     DEBUG: false
-    MAILGUN_API_KEY: ${env:MAILGUN_API_KEY, ''}
-    MAILGUN_DOMAIN: ${env:MAILGUN_DOMAIN, ''}
-    ADMIN_EMAIL: ${env:ADMIN_EMAIL, ''}
-    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID, ''}
-    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID, ''}
-    COGNITO_REGION: ${env:COGNITO_REGION, 'us-east-2'}
-    
-    
+    MAILGUN_API_KEY: ${env:MAILGUN_API_KEY}
+    MAILGUN_DOMAIN: ${env:MAILGUN_DOMAIN}
+    ADMIN_EMAIL: ${env:ADMIN_EMAIL}
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
+    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}
+    COGNITO_REGION: ${env:COGNITO_REGION}
+
+
   # IAM role permissions
   iam:
     role:
@@ -34,6 +34,11 @@ provider:
             - logs:CreateLogStream
             - logs:PutLogEvents
           Resource: "*"
+
+  apiGateway:
+    apiKeys:
+      - urbex-api-key-prod
+
 
   # Lambda function configuration
   memorySize: 512
@@ -65,6 +70,7 @@ functions:
       - httpApi:
           path: /api/v1/contact
           method: POST
+          cors: true
 
 
 
@@ -125,7 +131,8 @@ resources:
       Type: AWS::Cognito::UserPoolClient
       Properties:
         ClientName: ${self:service}-${self:provider.stage}-client
-        UserPoolId: !Ref CognitoUserPool
+        UserPoolId:
+          Ref: CognitoUserPool
         ExplicitAuthFlows:
           - ALLOW_USER_PASSWORD_AUTH
           - ALLOW_REFRESH_TOKEN_AUTH
@@ -155,4 +162,4 @@ resources:
       Description: API Gateway REST API ID
       Value: !Ref ApiGatewayRestApi
       Export:
-        Name: ${self:service}-${self:provider.stage}-api-gateway-id 
+        Name: ${self:service}-${self:provider.stage}-api-gateway-id

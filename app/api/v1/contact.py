@@ -5,8 +5,9 @@ This module provides contact form functionality for
 landing page integration.
 """
 
-from fastapi import APIRouter, HTTPException, status
 from datetime import datetime
+
+from fastapi import APIRouter, HTTPException, status
 
 from app.core.config import settings
 from app.models.contact import ContactForm, ContactResponse
@@ -19,10 +20,10 @@ router = APIRouter(prefix="/contact", tags=["Contact"])
 async def submit_contact_form(contact_data: ContactForm) -> ContactResponse:
     """
     Submit contact form from landing page.
-    
+
     Args:
         contact_data: Contact form data
-        
+
     Returns:
         Contact form response
     """
@@ -33,7 +34,7 @@ async def submit_contact_form(contact_data: ContactForm) -> ContactResponse:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Email service not configured",
             )
-        
+
         # Verificar que el email del admin esté configurado
         if not settings.admin_email:
             raise HTTPException(
@@ -72,4 +73,4 @@ async def submit_contact_form(contact_data: ContactForm) -> ContactResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error processing contact form: {str(e)}",
-        ) 
+        )

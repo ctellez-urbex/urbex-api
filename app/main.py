@@ -49,14 +49,18 @@ def create_app() -> FastAPI:
 
     # Global exception handler
     @app.exception_handler(Exception)
-    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    async def global_exception_handler(
+        request: Request, exc: Exception
+    ) -> JSONResponse:
         """Global exception handler."""
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
                 "message": "Internal server error",
-                "detail": str(exc) if settings.debug else "An unexpected error occurred",
+                "detail": str(exc)
+                if settings.debug
+                else "An unexpected error occurred",
             },
         )
 
@@ -91,4 +95,4 @@ def create_app() -> FastAPI:
 app = create_app()
 
 # Create Mangum handler for AWS Lambda
-handler = Mangum(app, lifespan="off") 
+handler = Mangum(app, lifespan="off")
