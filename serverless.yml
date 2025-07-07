@@ -7,8 +7,20 @@ provider:
   runtime: python3.11
   region: 'us-east-2'
   stage: ${opt:stage, 'prod'}
+  apiGateway:
+    apiKeys:
+      - name: urbex-api-key-${self:provider.stage}
+        description: API key for urbex-api-${self:provider.stage}
+    usagePlan:
+      name: urbex-api-usage-plan-${self:provider.stage}
+      description: Usage plan for urbex-api-${self:provider.stage}
+      quota:
+        limit: 10000
+        period: MONTH
+      throttle:
+        rateLimit: 10
+        burstLimit: 5
 
-    # Environment variables
   environment:
     STAGE: ${self:provider.stage}
     DEBUG: false
@@ -19,8 +31,6 @@ provider:
     COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}
     COGNITO_REGION: ${env:COGNITO_REGION}
 
-
-  # IAM role permissions
   iam:
     role:
       statements:
@@ -35,12 +45,6 @@ provider:
             - logs:PutLogEvents
           Resource: "*"
 
-  apiGateway:
-    apiKeys:
-      - urbex-api-key-${self:provider.stage}
-
-
-  # Lambda function configuration
   memorySize: 512
   timeout: 30
   logRetentionInDays: 14
@@ -53,9 +57,7 @@ functions:
           path: /api/v1/contact
           method: POST
           cors: true
-          private: true
-
-
+          private: true  # Esto es correcto y se mantiene
 
 plugins:
   - serverless-python-requirements
@@ -81,7 +83,6 @@ custom:
 
 resources:
   Resources:
-    # Cognito User Pool
     CognitoUserPool:
       Type: AWS::Cognito::UserPool
       Properties:
@@ -109,7 +110,6 @@ resources:
             Required: false
             Mutable: true
 
-    # Cognito User Pool Client
     CognitoUserPoolClient:
       Type: AWS::Cognito::UserPoolClient
       Properties:
