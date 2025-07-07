@@ -11,12 +11,12 @@ provider:
     # Environment variables
   environment:
     STAGE: ${self:provider.stage}
-    DEBUG: true
-    MAILGUN_API_KEY: ${env:MAILGUN_API_KEY, 'your-mailgun-api-key'}
-    MAILGUN_DOMAIN: ${env:MAILGUN_DOMAIN, 'your-mailgun-domain.com'}
-    ADMIN_EMAIL: ${env:ADMIN_EMAIL, 'carlos.tellez@urbex.com.co'}
-    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID, 'your-cognito-user-pool-id'}
-    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID, 'your-cognito-client-id'}
+    DEBUG: false
+    MAILGUN_API_KEY: ${env:MAILGUN_API_KEY, ''}
+    MAILGUN_DOMAIN: ${env:MAILGUN_DOMAIN, ''}
+    ADMIN_EMAIL: ${env:ADMIN_EMAIL, ''}
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID, ''}
+    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID, ''}
     COGNITO_REGION: ${env:COGNITO_REGION, 'us-east-2'}
     
     

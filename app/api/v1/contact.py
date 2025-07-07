@@ -27,6 +27,13 @@ async def submit_contact_form(contact_data: ContactForm) -> ContactResponse:
         Contact form response
     """
     try:
+        # Verificar configuración de Mailgun
+        if not settings.mailgun_api_key or not settings.mailgun_domain:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Email service not configured",
+            )
+        
         # Verificar que el email del admin esté configurado
         if not settings.admin_email:
             raise HTTPException(

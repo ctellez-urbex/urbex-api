@@ -59,6 +59,8 @@ class TestContactEndpoints:
         with patch("app.api.v1.contact.settings") as mock_settings:
             # Mock admin email not configured
             mock_settings.admin_email = None
+            mock_settings.mailgun_api_key = "test-key"
+            mock_settings.mailgun_domain = "test-domain.com"
             
             contact_data = {
                 "full_name": "Carlos López",
@@ -72,6 +74,27 @@ class TestContactEndpoints:
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             data = response.json()
             assert "Admin email not configured" in data["detail"]
+
+    def test_submit_contact_form_email_service_not_configured(self, client: pytest.FixtureRequest) -> None:
+        """Test contact form submission when email service is not configured."""
+        with patch("app.api.v1.contact.settings") as mock_settings:
+            # Mock email service not configured
+            mock_settings.mailgun_api_key = None
+            mock_settings.mailgun_domain = None
+            mock_settings.admin_email = "admin@example.com"
+            
+            contact_data = {
+                "full_name": "Ana García",
+                "email": "ana.garcia@example.com",
+                "phone": "+1122334455",
+                "message": "Consulta sobre servicios."
+            }
+            
+            response = client.post("/api/v1/contact/", json=contact_data)
+            
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+            data = response.json()
+            assert "Email service not configured" in data["detail"]
 
     def test_submit_contact_form_invalid_data(self, client: pytest.FixtureRequest) -> None:
         """Test contact form submission with invalid data."""

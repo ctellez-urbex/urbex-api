@@ -94,6 +94,31 @@ Required environment variables:
 - `ADMIN_EMAIL`: Admin email for contact form notifications
 - `SECRET_KEY`: JWT secret key
 
+### Production Configuration
+
+For production deployment, ensure these services are properly configured:
+
+1. **Mailgun Setup**:
+   - Create a Mailgun account at https://mailgun.com
+   - Add and verify your domain
+   - Get your API key from the dashboard
+   - Configure environment variables:
+     ```bash
+     MAILGUN_API_KEY=your-mailgun-api-key
+     MAILGUN_DOMAIN=your-verified-domain.com
+     ADMIN_EMAIL=your-admin-email@domain.com
+     ```
+
+2. **AWS Cognito Setup**:
+   - Create a User Pool in AWS Cognito
+   - Create an App Client (public client recommended)
+   - Configure environment variables:
+     ```bash
+     COGNITO_USER_POOL_ID=your-user-pool-id
+     COGNITO_CLIENT_ID=your-client-id
+     COGNITO_REGION=us-east-2
+     ```
+
 ### 4. Run the Application
 
 ```bash

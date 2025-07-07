@@ -251,73 +251,87 @@ class MailgunService:
         Returns:
             True if successful, False otherwise
         """
-        subject = f"Nuevo mensaje de contacto de {full_name}"
-        
-        html_content = f"""
-        <html>
-        <body>
-            <h1>Nuevo Mensaje de Contacto</h1>
-            <p>Has recibido un nuevo mensaje de contacto desde la landing page:</p>
+        try:
+            subject = f"Nuevo mensaje de contacto de {full_name}"
             
-            <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-                <h2>Información del Contacto:</h2>
-                <p><strong>Nombre completo:</strong> {full_name}</p>
-                <p><strong>Email:</strong> {email}</p>
-                <p><strong>Teléfono:</strong> {phone}</p>
-                <p><strong>Mensaje:</strong></p>
-                <div style="background-color: white; padding: 15px; border-left: 4px solid #007bff; margin: 10px 0;">
-                    {message.replace(chr(10), '<br>')}
+            html_content = f"""
+            <html>
+            <body>
+                <h1>Nuevo Mensaje de Contacto</h1>
+                <p>Has recibido un nuevo mensaje de contacto desde la landing page:</p>
+                
+                <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                    <h2>Información del Contacto:</h2>
+                    <p><strong>Nombre completo:</strong> {full_name}</p>
+                    <p><strong>Email:</strong> {email}</p>
+                    <p><strong>Teléfono:</strong> {phone}</p>
+                    <p><strong>Mensaje:</strong></p>
+                    <div style="background-color: white; padding: 15px; border-left: 4px solid #007bff; margin: 10px 0;">
+                        {message.replace(chr(10), '<br>')}
+                    </div>
                 </div>
-            </div>
+                
+                <p><strong>Fecha:</strong> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</p>
+                
+                <hr>
+                <p><em>Este mensaje fue enviado automáticamente desde el formulario de contacto de Urbex.</em></p>
+            </body>
+            </html>
+            """
             
-            <p><strong>Fecha:</strong> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</p>
+            # Enviar email al admin
+            admin_result = self.send_email(
+                to_emails=[admin_email],
+                subject=subject,
+                html=html_content,
+                reply_to=email,  # Para que el admin pueda responder directamente
+            )
             
-            <hr>
-            <p><em>Este mensaje fue enviado automáticamente desde el formulario de contacto de Urbex.</em></p>
-        </body>
-        </html>
-        """
-        
-        # Enviar email al admin
-        admin_result = self.send_email(
-            to_emails=[admin_email],
-            subject=subject,
-            html=html_content,
-            reply_to=email,  # Para que el admin pueda responder directamente
-        )
-        
-        # Enviar confirmación al usuario
-        user_subject = "Gracias por contactarnos - Urbex"
-        user_html_content = f"""
-        <html>
-        <body>
-            <h1>¡Gracias por contactarnos!</h1>
-            <p>Hola {full_name},</p>
-            <p>Hemos recibido tu mensaje y nos pondremos en contacto contigo pronto.</p>
+            if not admin_result:
+                print(f"Failed to send admin notification to {admin_email}")
+                return False
             
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <h3>Resumen de tu mensaje:</h3>
-                <p><strong>Email:</strong> {email}</p>
-                <p><strong>Teléfono:</strong> {phone}</p>
-                <p><strong>Mensaje:</strong></p>
-                <div style="background-color: white; padding: 10px; border-left: 3px solid #28a745;">
-                    {message[:200]}{'...' if len(message) > 200 else ''}
+            # Enviar confirmación al usuario
+            user_subject = "Gracias por contactarnos - Urbex"
+            user_html_content = f"""
+            <html>
+            <body>
+                <h1>¡Gracias por contactarnos!</h1>
+                <p>Hola {full_name},</p>
+                <p>Hemos recibido tu mensaje y nos pondremos en contacto contigo pronto.</p>
+                
+                <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <h3>Resumen de tu mensaje:</h3>
+                    <p><strong>Email:</strong> {email}</p>
+                    <p><strong>Teléfono:</strong> {phone}</p>
+                    <p><strong>Mensaje:</strong></p>
+                    <div style="background-color: white; padding: 10px; border-left: 3px solid #28a745;">
+                        {message[:200]}{'...' if len(message) > 200 else ''}
+                    </div>
                 </div>
-            </div>
+                
+                <p>Te responderemos en las próximas 24 horas.</p>
+                <p>Saludos,<br>El equipo de Urbex</p>
+            </body>
+            </html>
+            """
             
-            <p>Te responderemos en las próximas 24 horas.</p>
-            <p>Saludos,<br>El equipo de Urbex</p>
-        </body>
-        </html>
-        """
-        
-        user_result = self.send_email(
-            to_emails=[email],
-            subject=user_subject,
-            html=user_html_content,
-        )
-        
-        return admin_result is not None and user_result is not None
+            user_result = self.send_email(
+                to_emails=[email],
+                subject=user_subject,
+                html=user_html_content,
+            )
+            
+            if not user_result:
+                print(f"Failed to send confirmation email to {email}")
+                # No fallamos completamente si solo falla la confirmación
+                return True
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error in send_contact_form_email: {str(e)}")
+            return False
 
 
 # Global Mailgun service instance
