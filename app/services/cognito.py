@@ -157,10 +157,77 @@ class CognitoService:
         """
         try:
             response = self.client.get_user(AccessToken=access_token)
+            print(f"🔍 Raw Cognito response: {response}")
+            print(f"🔍 User attributes: {response.get('UserAttributes', [])}")
             return response
         except ClientError as e:
             print(f"Get user info error: {e}")
             return None
+
+    def get_user_info_admin(self, username: str) -> Optional[Dict[str, Any]]:
+        """
+        Get user information using admin privileges (includes custom attributes).
+
+        Args:
+            username: The username or email
+
+        Returns:
+            User information or None if failed
+        """
+        try:
+            response = self.client.admin_get_user(
+                UserPoolId=self.user_pool_id, Username=username
+            )
+            print(f"🔍 Admin get user response: {response}")
+            print(f"🔍 User attributes: {response.get('UserAttributes', [])}")
+            return response
+        except ClientError as e:
+            print(f"Admin get user info error: {e}")
+            return None
+
+    def get_user_info_by_token_admin(
+        self, access_token: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get user information using access token and then fetch full details with admin privileges.
+
+        Args:
+            access_token: The user's access token
+
+        Returns:
+            User information with custom attributes or None if failed
+        """
+        try:
+            # First get basic user info to extract username
+            basic_info = self.client.get_user(AccessToken=access_token)
+            print(f"🔍 Basic user info: {basic_info}")
+
+            # Extract username from the response
+            username = None
+            for attr in basic_info.get("UserAttributes", []):
+                if attr.get("Name") == "sub":
+                    # For admin_get_user, we need the actual username, not the sub
+                    # Let's try to get it from the token or use email
+                    pass
+                elif attr.get("Name") == "email":
+                    username = attr.get("Value")
+                    break
+
+            if not username:
+                print("❌ Could not extract username from token")
+                return basic_info
+
+            # Now get full user info with admin privileges
+            admin_info = self.client.admin_get_user(
+                UserPoolId=self.user_pool_id, Username=username
+            )
+            print(f"🔍 Admin user info: {admin_info}")
+            return admin_info
+
+        except ClientError as e:
+            print(f"Get user info by token admin error: {e}")
+            # Fallback to basic get_user
+            return self.get_user_info(access_token)
 
     def refresh_token(self, refresh_token: str) -> Optional[Dict[str, Any]]:
         """

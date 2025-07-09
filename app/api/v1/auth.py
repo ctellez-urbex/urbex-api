@@ -226,10 +226,10 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
                 error="Authentication failed",
             )
 
-        # Get user information from Cognito
+        # Get user information from Cognito with admin privileges to include custom attributes
         user_info = None
         try:
-            user_info = cognito_service.get_user_info(access_token)
+            user_info = cognito_service.get_user_info_by_token_admin(access_token)
         except Exception as e:
             print(f"⚠️ Warning: Failed to get user info: {e}")
             # Continue with login even if user info fails
@@ -240,6 +240,8 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
             for attr in user_info.get("UserAttributes", []):
                 name = attr.get("Name")
                 value = attr.get("Value")
+                print(f"🔍 Processing attribute: {name} = {value}")
+
                 if name == "email":
                     user_attributes["email"] = value
                 elif name == "given_name":
@@ -248,6 +250,10 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
                     user_attributes["last_name"] = value
                 elif name == "phone_number":
                     user_attributes["phone_number"] = value
+                elif name == "sub":
+                    # Only use sub if custom:su is not present
+                    if "su" not in user_attributes:
+                        user_attributes["su"] = value
                 elif name == "custom:su":
                     user_attributes["su"] = value
                 elif name == "custom:plan":
@@ -261,7 +267,7 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
             last_name=user_attributes.get("last_name"),
             phone_number=user_attributes.get("phone_number"),
             su=user_attributes.get("su"),
-            plan=user_attributes.get("plan"),
+            plan=user_attributes.get("plan", "basic"),  # Default plan if not set
             name=f"{user_attributes.get('first_name', '')} {user_attributes.get('last_name', '')}".strip()
             or None,
         )
@@ -345,8 +351,9 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
     try:
         print(f"🔍 Getting user info for token: {token[:20]}...")
 
-        # Get user info from Cognito
-        result = cognito_service.get_user_info(token)
+        # Get user info from Cognito with admin privileges to include custom attributes
+        result = cognito_service.get_user_info_by_token_admin(token)
+        print(f"🔍 User info: {result}")
 
         if not result:
             print("❌ No user info returned from Cognito")
@@ -362,6 +369,8 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
         for attr in user_attributes:
             name = attr.get("Name")
             value = attr.get("Value")
+            print(f"🔍 Processing attribute: {name} = {value}")
+
             if name == "custom:su":
                 user_info["su"] = value
             elif name == "email":
@@ -372,8 +381,14 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
                 user_info["last_name"] = value
             elif name == "phone_number":
                 user_info["phone_number"] = value
+            elif name == "sub":
+                # Only use sub if custom:su is not present
+                if "su" not in user_info:
+                    user_info["su"] = value
             elif name == "custom:plan":
                 user_info["plan"] = value
+
+        print(f"🔍 Processed user info: {user_info}")
 
         # Create user data
         user_data = LoginUserData(
@@ -382,7 +397,7 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
             last_name=user_info.get("last_name"),
             phone_number=user_info.get("phone_number"),
             su=user_info.get("su"),
-            plan=user_info.get("plan"),
+            plan=user_info.get("plan", "basic"),  # Default plan if not set
             name=f"{user_info.get('first_name', '')} {user_info.get('last_name', '')}".strip()
             or None,
         )

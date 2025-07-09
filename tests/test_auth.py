@@ -90,8 +90,8 @@ class TestAuthEndpoints:
                 }
             }
 
-            # Mock user info retrieval
-            mock_cognito.get_user_info.return_value = {
+            # Mock user info retrieval with admin privileges
+            mock_cognito.get_user_info_by_token_admin.return_value = {
                 "UserAttributes": [
                     {"Name": "sub", "Value": "test-user-id"},
                     {"Name": "email", "Value": "test@example.com"},
@@ -166,8 +166,8 @@ class TestAuthEndpoints:
     def test_get_current_user_success(self, client: pytest.FixtureRequest) -> None:
         """Test successful current user retrieval."""
         with patch("app.api.v1.auth.cognito_service") as mock_cognito:
-            # Mock successful user info retrieval
-            mock_cognito.get_user_info.return_value = {
+            # Mock successful user info retrieval with admin privileges
+            mock_cognito.get_user_info_by_token_admin.return_value = {
                 "UserAttributes": [
                     {"Name": "sub", "Value": "testuser"},
                     {"Name": "email", "Value": "test@example.com"},
@@ -193,7 +193,7 @@ class TestAuthEndpoints:
         """Test current user retrieval failure."""
         with patch("app.api.v1.auth.cognito_service") as mock_cognito:
             # Mock failed user info retrieval
-            mock_cognito.get_user_info.return_value = None
+            mock_cognito.get_user_info_by_token_admin.return_value = None
 
             headers = {"Authorization": "Bearer invalid_token"}
             response = client.get("/api/v1/auth/me", headers=headers)
