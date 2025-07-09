@@ -254,6 +254,10 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
                     user_attributes["su"] = value
                 elif name == "custom:plan":
                     user_attributes["plan"] = value
+                elif name == "sub":
+                    # Only use sub if custom:su is not present
+                    if "su" not in user_attributes:
+                        user_attributes["su"] = value
                 # Add other attributes as needed
 
         # Create user data
