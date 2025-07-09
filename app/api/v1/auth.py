@@ -254,11 +254,6 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
                     user_attributes["su"] = value
                 elif name == "custom:plan":
                     user_attributes["plan"] = value
-                elif name == "sub":
-                    # Only use sub if custom:su is not present
-                    if "su" not in user_attributes:
-                        user_attributes["su"] = value
-                # Add other attributes as needed
 
         # Create user data
         user_data = LoginUserData(
@@ -266,7 +261,7 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
             first_name=user_attributes.get("first_name"),
             last_name=user_attributes.get("last_name"),
             phone_number=user_attributes.get("phone_number"),
-            su=user_attributes.get("su"),
+            su=user_attributes.get("su", "1"),
             plan=user_attributes.get("plan", "Mensual"),
             name=f"{user_attributes.get('first_name', '')} {user_attributes.get('last_name', '')}".strip()
             or None,
@@ -372,6 +367,7 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
             print(f"🔍 Processing attribute: {name} = {value}")
 
             if name == "custom:su":
+                print(f"🔍 Processing attribute su: {name} = {value}")
                 user_info["su"] = value
             elif name == "email":
                 user_info["email"] = value
@@ -392,7 +388,7 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
             first_name=user_info.get("first_name"),
             last_name=user_info.get("last_name"),
             phone_number=user_info.get("phone_number"),
-            su=user_info.get("su"),
+            su=user_info.get("su", "1"),
             plan=user_info.get("plan", "Mensual"),
             name=f"{user_info.get('first_name', '')} {user_info.get('last_name', '')}".strip()
             or None,
