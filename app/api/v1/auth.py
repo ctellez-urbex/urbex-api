@@ -7,8 +7,8 @@ login, registration, and token management with Cognito integration.
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.models.auth import (
     AuthResponse,
@@ -28,6 +28,57 @@ from app.services.mailgun import mailgun_service
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 security = HTTPBearer()
+
+
+async def get_current_user_token(request: Request) -> str:
+    """
+    Extract and validate the Bearer token from the Authorization header.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The access token string
+
+    Raises:
+        HTTPException: If token is missing or invalid
+    """
+    try:
+        # Try to get the authorization header
+        auth_header = request.headers.get("Authorization")
+
+        if not auth_header:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authorization header missing",
+            )
+
+        # Check if it's a Bearer token
+        if not auth_header.startswith("Bearer "):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authorization header format. Expected 'Bearer <token>'",
+            )
+
+        # Extract the token
+        token = auth_header.replace("Bearer ", "").strip()
+
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token is empty",
+            )
+
+        return token
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error extracting token: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authorization header",
+        )
 
 
 @router.post("/register", response_model=AuthResponse)
@@ -197,8 +248,10 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
                     user_attributes["last_name"] = value
                 elif name == "phone_number":
                     user_attributes["phone_number"] = value
-                elif name == "sub":
+                elif name == "custom:su":
                     user_attributes["su"] = value
+                elif name == "custom:plan":
+                    user_attributes["plan"] = value
                 # Add other attributes as needed
 
         # Create user data
@@ -208,7 +261,7 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
             last_name=user_attributes.get("last_name"),
             phone_number=user_attributes.get("phone_number"),
             su=user_attributes.get("su"),
-            plan=None,  # Add plan logic if available
+            plan=user_attributes.get("plan"),
             name=f"{user_attributes.get('first_name', '')} {user_attributes.get('last_name', '')}".strip()
             or None,
         )
@@ -279,7 +332,7 @@ async def refresh_token(refresh_data: RefreshToken) -> TokenResponse:
 
 
 @router.get("/me", response_model=MeResponse)
-async def get_current_user(token: str = Depends(security)) -> MeResponse:
+async def get_current_user(token: str = Depends(get_current_user_token)) -> MeResponse:
     """
     Get current user information.
 
@@ -290,10 +343,10 @@ async def get_current_user(token: str = Depends(security)) -> MeResponse:
         Current user information with consistent response format
     """
     try:
-        print(f"🔍 Getting user info for token: {token.credentials[:20]}...")
+        print(f"🔍 Getting user info for token: {token[:20]}...")
 
         # Get user info from Cognito
-        result = cognito_service.get_user_info(token.credentials)
+        result = cognito_service.get_user_info(token)
 
         if not result:
             print("❌ No user info returned from Cognito")
@@ -309,7 +362,7 @@ async def get_current_user(token: str = Depends(security)) -> MeResponse:
         for attr in user_attributes:
             name = attr.get("Name")
             value = attr.get("Value")
-            if name == "sub":
+            if name == "custom:su":
                 user_info["su"] = value
             elif name == "email":
                 user_info["email"] = value
@@ -319,7 +372,7 @@ async def get_current_user(token: str = Depends(security)) -> MeResponse:
                 user_info["last_name"] = value
             elif name == "phone_number":
                 user_info["phone_number"] = value
-            elif name == "plan":
+            elif name == "custom:plan":
                 user_info["plan"] = value
 
         # Create user data
@@ -349,7 +402,7 @@ async def get_current_user(token: str = Depends(security)) -> MeResponse:
 
 
 @router.post("/logout", response_model=AuthResponse)
-async def logout_user(token: str = Depends(security)) -> AuthResponse:
+async def logout_user(token: str = Depends(get_current_user_token)) -> AuthResponse:
     """
     Logout user (invalidate token).
 
