@@ -271,6 +271,34 @@ Content-Type: application/json
 }
 ```
 
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "email": "john@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "phone_number": "+1234567890",
+      "su": "user-sub-id",
+      "plan": "basic",
+      "name": "John Doe"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": "Invalid credentials"
+}
+```
+
 #### Confirm Registration
 ```http
 POST /api/v1/auth/confirm

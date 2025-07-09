@@ -12,6 +12,9 @@ from fastapi.security import HTTPBearer
 
 from app.models.auth import (
     AuthResponse,
+    LoginData,
+    LoginResponse,
+    LoginUserData,
     RefreshToken,
     TokenResponse,
     UserConfirm,
@@ -131,16 +134,16 @@ async def confirm_registration(confirm_data: UserConfirm) -> AuthResponse:
     )
 
 
-@router.post("/login", response_model=TokenResponse)
-async def login_user(login_data: UserLogin) -> TokenResponse:
+@router.post("/login", response_model=LoginResponse)
+async def login_user(login_data: UserLogin) -> LoginResponse:
     """
-    Authenticate user and return access token.
+    Authenticate user and return user information with access token.
 
     Args:
         login_data: Login credentials
 
     Returns:
-        Token response with access and refresh tokens
+        Login response with user data and access token
     """
     try:
         print(f"🔍 Attempting login for user: {login_data.username}")
@@ -154,9 +157,9 @@ async def login_user(login_data: UserLogin) -> TokenResponse:
 
         if not result:
             print(f"❌ Authentication failed for user: {login_data.username}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials",
+            return LoginResponse(
+                success=False,
+                error="Invalid credentials",
             )
 
         # Extract tokens from Cognito response
@@ -166,24 +169,66 @@ async def login_user(login_data: UserLogin) -> TokenResponse:
         expires_in = auth_result.get("ExpiresIn", 3600)
 
         if not access_token:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication failed",
+            return LoginResponse(
+                success=False,
+                error="Authentication failed",
             )
 
-        return TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            expires_in=expires_in,
-            refresh_token=refresh_token,
+        # Get user information from Cognito
+        user_info = None
+        try:
+            user_info = cognito_service.get_user_info(access_token)
+        except Exception as e:
+            print(f"⚠️ Warning: Failed to get user info: {e}")
+            # Continue with login even if user info fails
+
+        # Extract user attributes
+        user_attributes = {}
+        if user_info:
+            for attr in user_info.get("UserAttributes", []):
+                name = attr.get("Name")
+                value = attr.get("Value")
+                if name == "email":
+                    user_attributes["email"] = value
+                elif name == "given_name":
+                    user_attributes["first_name"] = value
+                elif name == "family_name":
+                    user_attributes["last_name"] = value
+                elif name == "phone_number":
+                    user_attributes["phone_number"] = value
+                elif name == "sub":
+                    user_attributes["su"] = value
+                # Add other attributes as needed
+
+        # Create user data
+        user_data = LoginUserData(
+            email=user_attributes.get("email", ""),
+            first_name=user_attributes.get("first_name"),
+            last_name=user_attributes.get("last_name"),
+            phone_number=user_attributes.get("phone_number"),
+            su=user_attributes.get("su"),
+            plan=None,  # Add plan logic if available
+            name=f"{user_attributes.get('first_name', '')} {user_attributes.get('last_name', '')}".strip()
+            or None,
         )
 
-    except HTTPException:
-        raise
+        # Create login data
+        login_data_response = LoginData(
+            user=user_data,
+            token=access_token,
+        )
+
+        return LoginResponse(
+            success=True,
+            message="Login successful",
+            data=login_data_response,
+        )
+
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Login failed: {str(e)}",
+        print(f"❌ Login exception: {e}")
+        return LoginResponse(
+            success=False,
+            error=f"Login failed: {str(e)}",
         )
 
 

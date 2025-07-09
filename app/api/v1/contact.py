@@ -61,7 +61,7 @@ async def submit_contact_form(contact_data: ContactForm) -> ContactResponse:
             success=True,
             message="Mensaje enviado exitosamente. Te responderemos pronto.",
             data={
-                "full_name": contact_data.full_name,
+                "name": contact_data.name,
                 "email": contact_data.email,
                 "timestamp": datetime.now().isoformat(),
             },

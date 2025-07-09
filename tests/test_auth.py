@@ -90,14 +90,28 @@ class TestAuthEndpoints:
                 }
             }
 
+            # Mock user info retrieval
+            mock_cognito.get_user_info.return_value = {
+                "UserAttributes": [
+                    {"Name": "sub", "Value": "test-user-id"},
+                    {"Name": "email", "Value": "test@example.com"},
+                    {"Name": "given_name", "Value": "Test"},
+                    {"Name": "family_name", "Value": "User"},
+                ]
+            }
+
             response = client.post("/api/v1/auth/login", json=sample_login_data)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
-            assert data["access_token"] == "test_access_token"
-            assert data["token_type"] == "bearer"
-            assert data["expires_in"] == 3600
-            assert data["refresh_token"] == "test_refresh_token"
+            assert data["success"] is True
+            assert data["message"] == "Login successful"
+            assert "data" in data
+            assert data["data"]["user"]["email"] == "test@example.com"
+            assert data["data"]["user"]["first_name"] == "Test"
+            assert data["data"]["user"]["last_name"] == "User"
+            assert data["data"]["user"]["su"] == "test-user-id"
+            assert data["data"]["token"] == "test_access_token"
 
     def test_login_failure(
         self, client: pytest.FixtureRequest, sample_login_data: dict
@@ -109,9 +123,10 @@ class TestAuthEndpoints:
 
             response = client.post("/api/v1/auth/login", json=sample_login_data)
 
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
-            assert "Invalid credentials" in data["detail"]
+            assert data["success"] is False
+            assert data["error"] == "Invalid credentials"
 
     def test_refresh_token_success(self, client: pytest.FixtureRequest) -> None:
         """Test successful token refresh."""

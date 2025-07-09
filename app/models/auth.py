@@ -85,3 +85,31 @@ class AuthResponse(BaseModel):
     success: bool = Field(..., description="Operation success status")
     message: str = Field(..., description="Response message")
     data: Optional[dict] = Field(None, description="Response data")
+
+
+class LoginUserData(BaseModel):
+    """User data for login response."""
+
+    email: str = Field(..., description="User email address")
+    first_name: Optional[str] = Field(None, description="User's first name")
+    last_name: Optional[str] = Field(None, description="User's last name")
+    phone_number: Optional[str] = Field(None, description="User's phone number")
+    su: Optional[str] = Field(None, description="User's SU identifier")
+    plan: Optional[str] = Field(None, description="User's plan")
+    name: Optional[str] = Field(None, description="User's full name")
+
+
+class LoginData(BaseModel):
+    """Data structure for login response."""
+
+    user: LoginUserData = Field(..., description="User information")
+    token: str = Field(..., description="Access token")
+
+
+class LoginResponse(BaseModel):
+    """Login response model with the specified signature."""
+
+    success: bool = Field(..., description="Operation success status")
+    message: Optional[str] = Field(None, description="Response message")
+    error: Optional[str] = Field(None, description="Error message")
+    data: Optional[LoginData] = Field(None, description="Login data")
