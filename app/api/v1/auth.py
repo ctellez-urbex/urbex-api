@@ -313,12 +313,20 @@ async def get_current_user(token: str = Depends(security)) -> UserInfo:
                 user_info["first_name"] = value
             elif name == "family_name":
                 user_info["last_name"] = value
+            elif name == "phone_number":
+                user_info["phone_number"] = value
+            elif name == "su":
+                user_info["su"] = value
+            elif name == "plan":
+                user_info["plan"] = value
 
         return UserInfo(
-            username=user_info.get("username", ""),
             email=user_info.get("email", ""),
             first_name=user_info.get("first_name"),
             last_name=user_info.get("last_name"),
+            phone_number=user_info.get("phone_number"),
+            su=user_info.get("su"),
+            plan=user_info.get("plan"),
             is_active=True,  # Cognito users are active by default
             created_at=datetime.utcnow(),  # You might want to get this from Cognito
             updated_at=None,

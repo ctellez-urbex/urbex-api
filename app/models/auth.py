@@ -51,10 +51,12 @@ class TokenResponse(BaseModel):
 class UserInfo(BaseModel):
     """User information response model."""
 
-    username: str = Field(..., description="Username")
     email: str = Field(..., description="Email address")
     first_name: Optional[str] = Field(None, description="First name")
     last_name: Optional[str] = Field(None, description="Last name")
+    phone_number: Optional[str] = Field(None, description="Phone number")
+    su: Optional[str] = Field(None, description="SU identifier")
+    plan: Optional[str] = Field(None, description="User plan")
     is_active: bool = Field(..., description="User active status")
     created_at: datetime = Field(..., description="Account creation date")
     updated_at: Optional[datetime] = Field(None, description="Last update date")
