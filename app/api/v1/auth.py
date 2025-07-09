@@ -250,10 +250,6 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
                     user_attributes["last_name"] = value
                 elif name == "phone_number":
                     user_attributes["phone_number"] = value
-                elif name == "sub":
-                    # Only use sub if custom:su is not present
-                    if "su" not in user_attributes:
-                        user_attributes["su"] = value
                 elif name == "custom:su":
                     user_attributes["su"] = value
                 elif name == "custom:plan":
@@ -267,7 +263,7 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
             last_name=user_attributes.get("last_name"),
             phone_number=user_attributes.get("phone_number"),
             su=user_attributes.get("su"),
-            plan=user_attributes.get("plan", "basic"),  # Default plan if not set
+            plan=user_attributes.get("plan", "Mensual"),
             name=f"{user_attributes.get('first_name', '')} {user_attributes.get('last_name', '')}".strip()
             or None,
         )
@@ -381,10 +377,6 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
                 user_info["last_name"] = value
             elif name == "phone_number":
                 user_info["phone_number"] = value
-            elif name == "sub":
-                # Only use sub if custom:su is not present
-                if "su" not in user_info:
-                    user_info["su"] = value
             elif name == "custom:plan":
                 user_info["plan"] = value
 
@@ -397,7 +389,7 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
             last_name=user_info.get("last_name"),
             phone_number=user_info.get("phone_number"),
             su=user_info.get("su"),
-            plan=user_info.get("plan", "basic"),  # Default plan if not set
+            plan=user_info.get("plan", "Mensual"),
             name=f"{user_info.get('first_name', '')} {user_info.get('last_name', '')}".strip()
             or None,
         )
