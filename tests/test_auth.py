@@ -181,10 +181,13 @@ class TestAuthEndpoints:
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
-            assert data["username"] == "testuser"
-            assert data["email"] == "test@example.com"
-            assert data["first_name"] == "Test"
-            assert data["last_name"] == "User"
+            assert data["success"] is True
+            assert data["message"] == "User information retrieved successfully"
+            assert "data" in data
+            assert data["data"]["email"] == "test@example.com"
+            assert data["data"]["first_name"] == "Test"
+            assert data["data"]["last_name"] == "User"
+            assert data["data"]["su"] == "testuser"
 
     def test_get_current_user_failure(self, client: pytest.FixtureRequest) -> None:
         """Test current user retrieval failure."""
@@ -195,9 +198,10 @@ class TestAuthEndpoints:
             headers = {"Authorization": "Bearer invalid_token"}
             response = client.get("/api/v1/auth/me", headers=headers)
 
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
-            assert "Invalid token" in data["detail"]
+            assert data["success"] is False
+            assert data["error"] == "Invalid token"
 
     def test_logout_success(self, client: pytest.FixtureRequest) -> None:
         """Test successful user logout."""

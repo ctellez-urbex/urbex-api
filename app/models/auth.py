@@ -115,3 +115,12 @@ class LoginResponse(BaseModel):
     message: Optional[str] = Field(None, description="Response message")
     error: Optional[str] = Field(None, description="Error message")
     data: Optional[LoginData] = Field(None, description="Login data")
+
+
+class MeResponse(BaseModel):
+    """Me endpoint response model with consistent format."""
+
+    success: bool = Field(..., description="Operation success status")
+    message: Optional[str] = Field(None, description="Response message")
+    error: Optional[str] = Field(None, description="Error message")
+    data: Optional[LoginUserData] = Field(None, description="User data")

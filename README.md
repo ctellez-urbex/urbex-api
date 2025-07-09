@@ -316,6 +316,34 @@ GET /api/v1/auth/me
 Authorization: Bearer <access_token>
 ```
 
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User information retrieved successfully",
+  "error": null,
+  "data": {
+    "email": "john@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "phone_number": "+1234567890",
+    "su": "user-sub-id",
+    "plan": "basic",
+    "name": "John Doe"
+  }
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "message": null,
+  "error": "Invalid token",
+  "data": null
+}
+```
+
 #### Refresh Token
 ```http
 POST /api/v1/auth/refresh

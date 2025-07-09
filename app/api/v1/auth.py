@@ -15,6 +15,7 @@ from app.models.auth import (
     LoginData,
     LoginResponse,
     LoginUserData,
+    MeResponse,
     RefreshToken,
     TokenResponse,
     UserConfirm,
@@ -277,8 +278,8 @@ async def refresh_token(refresh_data: RefreshToken) -> TokenResponse:
         )
 
 
-@router.get("/me", response_model=UserInfo)
-async def get_current_user(token: str = Depends(security)) -> UserInfo:
+@router.get("/me", response_model=MeResponse)
+async def get_current_user(token: str = Depends(security)) -> MeResponse:
     """
     Get current user information.
 
@@ -286,16 +287,19 @@ async def get_current_user(token: str = Depends(security)) -> UserInfo:
         token: Bearer token
 
     Returns:
-        Current user information
+        Current user information with consistent response format
     """
     try:
+        print(f"🔍 Getting user info for token: {token.credentials[:20]}...")
+
         # Get user info from Cognito
         result = cognito_service.get_user_info(token.credentials)
 
         if not result:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token",
+            print("❌ No user info returned from Cognito")
+            return MeResponse(
+                success=False,
+                error="Invalid token",
             )
 
         # Extract user attributes
@@ -306,7 +310,7 @@ async def get_current_user(token: str = Depends(security)) -> UserInfo:
             name = attr.get("Name")
             value = attr.get("Value")
             if name == "sub":
-                user_info["username"] = value
+                user_info["su"] = value
             elif name == "email":
                 user_info["email"] = value
             elif name == "given_name":
@@ -315,29 +319,32 @@ async def get_current_user(token: str = Depends(security)) -> UserInfo:
                 user_info["last_name"] = value
             elif name == "phone_number":
                 user_info["phone_number"] = value
-            elif name == "su":
-                user_info["su"] = value
             elif name == "plan":
                 user_info["plan"] = value
 
-        return UserInfo(
+        # Create user data
+        user_data = LoginUserData(
             email=user_info.get("email", ""),
             first_name=user_info.get("first_name"),
             last_name=user_info.get("last_name"),
             phone_number=user_info.get("phone_number"),
             su=user_info.get("su"),
             plan=user_info.get("plan"),
-            is_active=True,  # Cognito users are active by default
-            created_at=datetime.utcnow(),  # You might want to get this from Cognito
-            updated_at=None,
+            name=f"{user_info.get('first_name', '')} {user_info.get('last_name', '')}".strip()
+            or None,
         )
 
-    except HTTPException:
-        raise
+        return MeResponse(
+            success=True,
+            message="User information retrieved successfully",
+            data=user_data,
+        )
+
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get user info: {str(e)}",
+        print(f"❌ Error getting user info: {e}")
+        return MeResponse(
+            success=False,
+            error=f"Failed to get user info: {str(e)}",
         )
 
 
