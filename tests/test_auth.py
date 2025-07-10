@@ -93,6 +93,7 @@ class TestAuthEndpoints:
             # Mock user info retrieval with admin privileges
             mock_cognito.get_user_info_by_token_admin.return_value = {
                 "UserAttributes": [
+                    {"Name": "custom:su", "Value": "test-user-id"},
                     {"Name": "sub", "Value": "test-user-id"},
                     {"Name": "email", "Value": "test@example.com"},
                     {"Name": "given_name", "Value": "Test"},
@@ -169,6 +170,7 @@ class TestAuthEndpoints:
             # Mock successful user info retrieval with admin privileges
             mock_cognito.get_user_info_by_token_admin.return_value = {
                 "UserAttributes": [
+                    {"Name": "custom:su", "Value": "testuser"},
                     {"Name": "sub", "Value": "testuser"},
                     {"Name": "email", "Value": "test@example.com"},
                     {"Name": "given_name", "Value": "Test"},
@@ -202,6 +204,75 @@ class TestAuthEndpoints:
             data = response.json()
             assert data["success"] is False
             assert data["error"] == "Invalid token"
+
+    def test_forgot_password_success(self, client: pytest.FixtureRequest) -> None:
+        """Test successful forgot password request."""
+        with patch("app.api.v1.auth.cognito_service") as mock_cognito:
+            # Mock successful forgot password
+            mock_cognito.forgot_password.return_value = True
+
+            forgot_data = {"email": "test@example.com"}
+
+            response = client.post("/api/v1/auth/forgot-password", json=forgot_data)
+
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            assert data["success"] is True
+            assert "Password reset code sent" in data["message"]
+            assert data["data"]["email"] == "test@example.com"
+
+    def test_forgot_password_failure(self, client: pytest.FixtureRequest) -> None:
+        """Test forgot password request failure."""
+        with patch("app.api.v1.auth.cognito_service") as mock_cognito:
+            # Mock failed forgot password
+            mock_cognito.forgot_password.return_value = False
+
+            forgot_data = {"email": "test@example.com"}
+
+            response = client.post("/api/v1/auth/forgot-password", json=forgot_data)
+
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            assert data["success"] is False
+            assert "Failed to initiate password reset" in data["message"]
+
+    def test_reset_password_success(self, client: pytest.FixtureRequest) -> None:
+        """Test successful password reset."""
+        with patch("app.api.v1.auth.cognito_service") as mock_cognito:
+            # Mock successful password reset
+            mock_cognito.confirm_forgot_password.return_value = True
+
+            reset_data = {
+                "username": "test@example.com",
+                "confirmation_code": "123456",
+                "new_password": "NewPassword123!",
+            }
+
+            response = client.post("/api/v1/auth/reset-password", json=reset_data)
+
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            assert data["success"] is True
+            assert "Password reset successfully" in data["message"]
+
+    def test_reset_password_failure(self, client: pytest.FixtureRequest) -> None:
+        """Test password reset failure."""
+        with patch("app.api.v1.auth.cognito_service") as mock_cognito:
+            # Mock failed password reset
+            mock_cognito.confirm_forgot_password.return_value = False
+
+            reset_data = {
+                "username": "test@example.com",
+                "confirmation_code": "123456",
+                "new_password": "NewPassword123!",
+            }
+
+            response = client.post("/api/v1/auth/reset-password", json=reset_data)
+
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            assert data["success"] is False
+            assert "Failed to reset password" in data["message"]
 
     def test_logout_success(self, client: pytest.FixtureRequest) -> None:
         """Test successful user logout."""

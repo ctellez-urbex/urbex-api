@@ -28,7 +28,9 @@ provider:
         - Effect: Allow
           Action:
             - cognito-idp:*
-          Resource: "*"
+          Resource:
+            - "arn:aws:cognito-idp:us-east-2:533266998582:userpool/us-east-2_Fpda5LMX0"
+            - "arn:aws:cognito-idp:us-east-2:533266998582:userpool/us-east-2_Fpda5LMX0/*"
         - Effect: Allow
           Action:
             - logs:CreateLogGroup
@@ -78,6 +80,16 @@ functions:
           private: true
       - http:
           path: /api/v1/auth/logout
+          method: POST
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/auth/forgot-password
+          method: POST
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/auth/reset-password
           method: POST
           cors: true
           private: true

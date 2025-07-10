@@ -71,7 +71,8 @@ class PasswordReset(BaseModel):
 class PasswordResetConfirm(BaseModel):
     """Password reset confirmation model."""
 
-    token: str = Field(..., description="Reset token")
+    username: str = Field(..., description="Username or email")
+    confirmation_code: str = Field(..., description="Confirmation code sent to email")
     new_password: str = Field(..., description="New password", min_length=8)
 
 

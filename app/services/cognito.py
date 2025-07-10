@@ -198,24 +198,24 @@ class CognitoService:
             User information with custom attributes or None if failed
         """
         try:
-            # First get basic user info to extract username
+            # First get basic user info to extract email
             basic_info = self.client.get_user(AccessToken=access_token)
             print(f"🔍 Basic user info: {basic_info}")
-            # Extract username from the response
-            username = None
+            # Extract email from the response
+            email = None
             for attr in basic_info.get("UserAttributes", []):
                 if attr.get("Name") == "email":
-                    username = attr.get("Value")
+                    email = attr.get("Value")
                     break
-            if not username:
-                print("❌ Could not extract username from token")
+            if not email:
+                print("❌ Could not extract email from token")
                 return basic_info
             print(
-                f"🔍 About to call admin_get_user with UserPoolId={self.user_pool_id}, Username={username}"
+                f"🔍 About to call admin_get_user with UserPoolId={self.user_pool_id}, Username={email}"
             )
-            # Now get full user info with admin privileges
+            # Now get full user info with admin privileges using email as username
             admin_info = self.client.admin_get_user(
-                UserPoolId=self.user_pool_id, Username=username
+                UserPoolId=self.user_pool_id, Username=email
             )
             print(f"🔍 Admin user info: {admin_info}")
             return admin_info
@@ -228,6 +228,68 @@ class CognitoService:
             print(traceback.format_exc())
             # Fallback to basic get_user
             return self.get_user_info(access_token)
+
+    def forgot_password(self, username: str) -> bool:
+        """
+        Initiate forgot password process.
+
+        Args:
+            username: The username or email
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            forgot_params = {
+                "ClientId": self.client_id,
+                "Username": username,
+            }
+
+            if self.client_secret:
+                forgot_params["SecretHash"] = self._get_secret_hash(username)
+
+            self.client.forgot_password(**forgot_params)
+            print(f"✅ Forgot password initiated for user: {username}")
+            return True
+        except ClientError as e:
+            print(f"❌ Forgot password error: {e}")
+            print(f"❌ Error code: {e.response['Error']['Code']}")
+            print(f"❌ Error message: {e.response['Error']['Message']}")
+            return False
+
+    def confirm_forgot_password(
+        self, username: str, confirmation_code: str, new_password: str
+    ) -> bool:
+        """
+        Confirm forgot password with confirmation code and new password.
+
+        Args:
+            username: The username or email
+            confirmation_code: The confirmation code sent to user
+            new_password: The new password
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            confirm_params = {
+                "ClientId": self.client_id,
+                "Username": username,
+                "ConfirmationCode": confirmation_code,
+                "Password": new_password,
+            }
+
+            if self.client_secret:
+                confirm_params["SecretHash"] = self._get_secret_hash(username)
+
+            self.client.confirm_forgot_password(**confirm_params)
+            print(f"✅ Password reset confirmed for user: {username}")
+            return True
+        except ClientError as e:
+            print(f"❌ Confirm forgot password error: {e}")
+            print(f"❌ Error code: {e.response['Error']['Code']}")
+            print(f"❌ Error message: {e.response['Error']['Message']}")
+            return False
 
     def refresh_token(self, refresh_token: str) -> Optional[Dict[str, Any]]:
         """

@@ -16,6 +16,8 @@ from app.models.auth import (
     LoginResponse,
     LoginUserData,
     MeResponse,
+    PasswordReset,
+    PasswordResetConfirm,
     RefreshToken,
     TokenResponse,
     UserConfirm,
@@ -229,18 +231,14 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
         # Get user information from Cognito with admin privileges to include custom attributes
         user_info = None
         try:
-            print(f"🔍 Attempting to get user info with admin privileges...")
             user_info = cognito_service.get_user_info_by_token_admin(access_token)
-            print(f"🔍 Admin user info result: {user_info is not None}")
         except Exception as e:
-            print(f"⚠️ Warning: Failed to get user info with admin: {e}")
+            print(f"⚠️ Admin user info failed, falling back to basic: {e}")
             # Fallback to basic get_user
             try:
-                print(f"🔍 Falling back to basic get_user...")
                 user_info = cognito_service.get_user_info(access_token)
-                print(f"🔍 Basic user info result: {user_info is not None}")
             except Exception as e2:
-                print(f"⚠️ Warning: Failed to get user info with basic method: {e2}")
+                print(f"⚠️ Basic user info also failed: {e2}")
                 # Continue with login even if user info fails
 
         # Extract user attributes
@@ -361,7 +359,9 @@ async def get_current_user(
         print(f"🔍 Getting user info for token: {token[:20]}...")
 
         # Get user info from Cognito with admin privileges to include custom attributes
-        print(f"🔍 Attempting to get user info with admin privileges...")
+        print(
+            f"🔍 About to call admin_get_user with UserPoolId={cognito_service.user_pool_id}, Username={token}"
+        )
         result = cognito_service.get_user_info_by_token_admin(token)
         print(f"🔍 Admin user info result: {result is not None}")
         print(f"🔍 User info: {result}")
@@ -421,6 +421,85 @@ async def get_current_user(
         return MeResponse(
             success=False,
             error=f"Failed to get user info: {str(e)}",
+        )
+
+
+@router.post("/forgot-password", response_model=AuthResponse)
+async def forgot_password(password_reset: PasswordReset) -> AuthResponse:
+    """
+    Initiate forgot password process.
+
+    Args:
+        password_reset: Password reset request data
+
+    Returns:
+        Password reset initiation response
+    """
+    try:
+        print(f"🔍 Forgot password request for email: {password_reset.email}")
+
+        # Initiate forgot password process
+        success = cognito_service.forgot_password(password_reset.email)
+
+        if not success:
+            return AuthResponse(
+                success=False,
+                message="Fallo al iniciar el restablecimiento de contraseña. Por favor, verifique su dirección de correo electrónico.",
+            )
+
+        return AuthResponse(
+            success=True,
+            message="Código de restablecimiento de contraseña enviado a su dirección de correo electrónico.",
+            data={"email": password_reset.email},
+        )
+
+    except Exception as e:
+        print(f"❌ Forgot password exception: {e}")
+        return AuthResponse(
+            success=False,
+            message=f"Password reset failed: {str(e)}",
+        )
+
+
+@router.post("/reset-password", response_model=AuthResponse)
+async def reset_password(password_reset_confirm: PasswordResetConfirm) -> AuthResponse:
+    """
+    Confirm password reset with code and new password.
+
+    Args:
+        password_reset_confirm: Password reset confirmation data
+
+    Returns:
+        Password reset confirmation response
+    """
+    try:
+        print(
+            f"🔍 Password reset confirmation request for user: {password_reset_confirm.username}"
+        )
+
+        # Confirm password reset
+        success = cognito_service.confirm_forgot_password(
+            username=password_reset_confirm.username,
+            confirmation_code=password_reset_confirm.confirmation_code,
+            new_password=password_reset_confirm.new_password,
+        )
+
+        if not success:
+            return AuthResponse(
+                success=False,
+                message="Fallo al restablecer la contraseña. Por favor, verifique su código de confirmación.",
+            )
+
+        return AuthResponse(
+            success=True,
+            message="Contraseña restablecida correctamente. Ahora puede iniciar sesión con su nueva contraseña.",
+        )
+
+    except Exception as e:
+        print(f"❌ Reset password exception: {e}")
+        return AuthResponse(
+            success=False,
+            message=f"Password reset failed: {str(e)}",
         )
 
 

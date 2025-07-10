@@ -112,12 +112,23 @@ For production deployment, ensure these services are properly configured:
 2. **AWS Cognito Setup**:
    - Create a User Pool in AWS Cognito
    - Create an App Client (public client recommended)
+   - **Important**: Enable `USER_PASSWORD_AUTH` flow in the App Client settings
    - Configure environment variables:
      ```bash
      COGNITO_USER_POOL_ID=your-user-pool-id
      COGNITO_CLIENT_ID=your-client-id
      COGNITO_REGION=us-east-2
      ```
+
+   **Note**: If you encounter `USER_PASSWORD_AUTH flow not enabled for this client` error,
+   enable this authentication flow in your Cognito App Client settings.
+
+3. **Custom Cognito Attributes**:
+   The API supports custom Cognito attributes:
+   - `custom:su`: User subscription ID (used as `su` in API responses)
+   - `custom:plan`: User subscription plan (used as `plan` in API responses)
+
+   These attributes are automatically included in login and user info responses.
 
 ### 4. Run the Application
 
