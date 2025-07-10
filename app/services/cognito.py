@@ -201,31 +201,31 @@ class CognitoService:
             # First get basic user info to extract username
             basic_info = self.client.get_user(AccessToken=access_token)
             print(f"🔍 Basic user info: {basic_info}")
-
             # Extract username from the response
             username = None
             for attr in basic_info.get("UserAttributes", []):
-                if attr.get("Name") == "sub":
-                    # For admin_get_user, we need the actual username, not the sub
-                    # Let's try to get it from the token or use email
-                    pass
-                elif attr.get("Name") == "email":
+                if attr.get("Name") == "email":
                     username = attr.get("Value")
                     break
-
             if not username:
                 print("❌ Could not extract username from token")
                 return basic_info
-
+            print(
+                f"🔍 About to call admin_get_user with UserPoolId={self.user_pool_id}, Username={username}"
+            )
             # Now get full user info with admin privileges
             admin_info = self.client.admin_get_user(
                 UserPoolId=self.user_pool_id, Username=username
             )
             print(f"🔍 Admin user info: {admin_info}")
             return admin_info
+        except Exception as e:
+            import traceback
 
-        except ClientError as e:
-            print(f"Get user info by token admin error: {e}")
+            print(
+                f"❌ Exception in get_user_info_by_token_admin: {type(e).__name__}: {e}"
+            )
+            print(traceback.format_exc())
             # Fallback to basic get_user
             return self.get_user_info(access_token)
 
