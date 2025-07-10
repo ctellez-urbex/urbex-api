@@ -96,10 +96,12 @@ class LoginUserData(BaseModel):
     first_name: Optional[str] = Field(None, description="User's first name")
     last_name: Optional[str] = Field(None, description="User's last name")
     phone_number: Optional[str] = Field(None, description="User's phone number")
-    su: Optional[str] = Field(None, description="property validate super user")
-    plan: Optional[str] = Field(None, description="User's plan")
+    su: Optional[str] = Field(None, description="Super user level from custom:su")
+    sub: Optional[str] = Field(
+        None, description="User's unique identifier from Cognito"
+    )
+    plan: Optional[str] = Field(None, description="User's plan from custom:plan")
     name: Optional[str] = Field(None, description="User's full name")
-    sub: Optional[str] = Field(None, description="User's sub identifier")
 
 
 class LoginData(BaseModel):

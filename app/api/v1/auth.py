@@ -244,6 +244,8 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
 
                 if name == "custom:su":
                     user_attributes["su"] = value
+                elif name == "sub":
+                    user_attributes["sub"] = value
                 elif name == "email":
                     user_attributes["email"] = value
                 elif name == "given_name":
@@ -254,8 +256,6 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
                     user_attributes["phone_number"] = value
                 elif name == "custom:plan":
                     user_attributes["plan"] = value
-                elif name == "sub":
-                    user_attributes["sub"] = value
 
         # Create user data
         user_data = LoginUserData(
@@ -264,10 +264,10 @@ async def login_user(login_data: UserLogin) -> LoginResponse:
             last_name=user_attributes.get("last_name"),
             phone_number=user_attributes.get("phone_number"),
             su=user_attributes.get("su", "1"),
+            sub=user_attributes.get("sub"),
             plan=user_attributes.get("plan", "Mensual"),
             name=f"{user_attributes.get('first_name', '')} {user_attributes.get('last_name', '')}".strip()
             or None,
-            sub=user_attributes.get("sub"),
         )
 
         # Create login data
@@ -367,9 +367,12 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
         for attr in user_attributes:
             name = attr.get("Name")
             value = attr.get("Value")
+            print(f"🔍 Processing attribute: {name} = {value}")
 
             if name == "custom:su":
                 user_info["su"] = value
+            elif name == "sub":
+                user_info["sub"] = value
             elif name == "email":
                 user_info["email"] = value
             elif name == "given_name":
@@ -380,9 +383,6 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
                 user_info["phone_number"] = value
             elif name == "custom:plan":
                 user_info["plan"] = value
-            elif name == "sub":
-                print(f"🔍 Hola mundos sub: {name} = {value}")
-                user_info["sub"] = value
 
         # Create user data
         user_data = LoginUserData(
@@ -391,10 +391,10 @@ async def get_current_user(token: str = Depends(get_current_user_token)) -> MeRe
             last_name=user_info.get("last_name"),
             phone_number=user_info.get("phone_number"),
             su=user_info.get("su", "1"),
+            sub=user_info.get("sub"),
             plan=user_info.get("plan", "Mensual"),
             name=f"{user_info.get('first_name', '')} {user_info.get('last_name', '')}".strip()
             or None,
-            sub=user_info.get("sub"),
         )
         print(f"🔍 User data: {user_data}")
         return MeResponse(
