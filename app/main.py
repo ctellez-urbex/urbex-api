@@ -47,6 +47,16 @@ def create_app() -> FastAPI:
         allow_headers=settings.allowed_headers,
     )
 
+    # Add no-cache middleware
+    @app.middleware("http")
+    async def add_no_cache_headers(request: Request, call_next):
+        """Add headers to prevent caching."""
+        response = await call_next(request)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
     # Global exception handler
     @app.exception_handler(Exception)
     async def global_exception_handler(

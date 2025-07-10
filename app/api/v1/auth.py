@@ -336,7 +336,9 @@ async def refresh_token(refresh_data: RefreshToken) -> TokenResponse:
 
 
 @router.get("/me", response_model=MeResponse)
-async def get_current_user(token: str = Depends(get_current_user_token)) -> MeResponse:
+async def get_current_user(
+    token: str = Depends(get_current_user_token), _cache_bust: str = None
+) -> MeResponse:
     """
     Get current user information.
 
