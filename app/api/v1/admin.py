@@ -5,17 +5,14 @@ This module provides administrative endpoints for managing users
 in the Cognito User Pool.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.security import verify_admin_token
 from app.models.admin import (
     AdminResponse,
-    UserInfo,
     UserListRequest,
-    UserListResponse,
     UserStatus,
     UserStatusUpdateRequest,
     UserUpdateRequest,
