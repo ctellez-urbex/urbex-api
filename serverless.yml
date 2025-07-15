@@ -93,6 +93,27 @@ functions:
           method: POST
           cors: true
           private: true
+      # Admin endpoints
+      - http:
+          path: /api/v1/admin/users
+          method: POST
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/admin/user/email/{email}
+          method: GET
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/admin/user/{user_id}
+          method: PUT
+          cors: true
+          private: true
+      - http:
+          path: /api/v1/admin/user/{user_id}/status
+          method: PUT
+          cors: true
+          private: true
 
 plugins:
   - serverless-python-requirements

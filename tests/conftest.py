@@ -34,11 +34,12 @@ def mock_mailgun_service() -> Mock:
 def sample_user_data() -> dict:
     """Sample user data for testing."""
     return {
-        "username": "testuser",
         "email": "test@example.com",
         "password": "testpassword123",
         "first_name": "Test",
         "last_name": "User",
+        "phone_number": "+1234567890",
+        "plan": "Mensual",
     }
 
 

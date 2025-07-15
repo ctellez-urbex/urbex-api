@@ -21,6 +21,8 @@ class TestAuthEndpoints:
         with patch("app.api.v1.auth.cognito_service") as mock_cognito, patch(
             "app.api.v1.auth.mailgun_service"
         ) as mock_mailgun:
+            # Mock user doesn't exist check
+            mock_cognito.check_user_exists.return_value = False
             # Mock successful registration
             mock_cognito.register_user.return_value = {"UserSub": "test-user-id"}
             mock_mailgun.send_welcome_email.return_value = True
@@ -31,13 +33,17 @@ class TestAuthEndpoints:
             data = response.json()
             assert data["success"] is True
             assert "User registered successfully" in data["message"]
-            assert data["data"]["username"] == sample_user_data["username"]
+            assert data["data"]["email"] == sample_user_data["email"]
+            assert data["data"]["plan"] == sample_user_data["plan"]
+            assert data["data"]["su"] == "1"
 
     def test_register_user_failure(
         self, client: pytest.FixtureRequest, sample_user_data: dict
     ) -> None:
         """Test user registration failure."""
         with patch("app.api.v1.auth.cognito_service") as mock_cognito:
+            # Mock user doesn't exist check
+            mock_cognito.check_user_exists.return_value = False
             # Mock failed registration
             mock_cognito.register_user.return_value = None
 
@@ -47,11 +53,28 @@ class TestAuthEndpoints:
             data = response.json()
             assert "Failed to register user" in data["detail"]
 
+    def test_register_user_already_exists(
+        self, client: pytest.FixtureRequest, sample_user_data: dict
+    ) -> None:
+        """Test user registration when user already exists."""
+        with patch("app.api.v1.auth.cognito_service") as mock_cognito:
+            # Mock user already exists
+            mock_cognito.check_user_exists.return_value = True
+
+            response = client.post("/api/v1/auth/register", json=sample_user_data)
+
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            assert data["success"] is False
+            assert "already exists" in data["message"]
+
     def test_confirm_registration_success(self, client: pytest.FixtureRequest) -> None:
         """Test successful registration confirmation."""
         with patch("app.api.v1.auth.cognito_service") as mock_cognito:
             # Mock successful confirmation
             mock_cognito.confirm_registration.return_value = True
+            # Mock successful user disable
+            mock_cognito.disable_user.return_value = True
 
             confirm_data = {"username": "testuser", "confirmation_code": "123456"}
 
@@ -61,6 +84,7 @@ class TestAuthEndpoints:
             data = response.json()
             assert data["success"] is True
             assert "User confirmed successfully" in data["message"]
+            assert "Account is now disabled" in data["message"]
 
     def test_confirm_registration_failure(self, client: pytest.FixtureRequest) -> None:
         """Test registration confirmation failure."""
@@ -218,7 +242,7 @@ class TestAuthEndpoints:
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
-            assert "Password reset code sent" in data["message"]
+            assert "Código de restablecimiento" in data["message"]
             assert data["data"]["email"] == "test@example.com"
 
     def test_forgot_password_failure(self, client: pytest.FixtureRequest) -> None:
@@ -234,7 +258,7 @@ class TestAuthEndpoints:
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is False
-            assert "Failed to initiate password reset" in data["message"]
+            assert "Fallo al iniciar" in data["message"]
 
     def test_reset_password_success(self, client: pytest.FixtureRequest) -> None:
         """Test successful password reset."""
@@ -253,7 +277,7 @@ class TestAuthEndpoints:
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
-            assert "Password reset successfully" in data["message"]
+            assert "Contraseña restablecida correctamente" in data["message"]
 
     def test_reset_password_failure(self, client: pytest.FixtureRequest) -> None:
         """Test password reset failure."""
@@ -272,7 +296,7 @@ class TestAuthEndpoints:
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is False
-            assert "Failed to reset password" in data["message"]
+            assert "Fallo al restablecer" in data["message"]
 
     def test_logout_success(self, client: pytest.FixtureRequest) -> None:
         """Test successful user logout."""

@@ -21,7 +21,6 @@ class UserLogin(BaseModel):
 class UserRegister(BaseModel):
     """User registration request model."""
 
-    username: str = Field(..., description="Username", min_length=3, max_length=50)
     email: EmailStr = Field(..., description="User email address")
     password: str = Field(..., description="User password", min_length=8)
     first_name: Optional[str] = Field(
@@ -29,6 +28,12 @@ class UserRegister(BaseModel):
     )
     last_name: Optional[str] = Field(
         None, description="User's last name", max_length=50
+    )
+    phone_number: Optional[str] = Field(
+        None, description="User's phone number", max_length=20
+    )
+    plan: Optional[str] = Field(
+        "Mensual", description="User's subscription plan", max_length=20
     )
 
 

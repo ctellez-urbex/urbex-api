@@ -19,15 +19,47 @@ class CognitoService:
 
     def __init__(self) -> None:
         """Initialize the Cognito service with AWS client."""
-        self.client = boto3.client(
-            "cognito-idp",
-            region_name=settings.cognito_region or settings.aws_region,
-            aws_access_key_id=settings.aws_access_key_id,
-            aws_secret_access_key=settings.aws_secret_access_key,
-        )
-        self.user_pool_id = settings.cognito_user_pool_id
-        self.client_id = settings.cognito_client_id
-        self.client_secret = settings.cognito_client_secret
+        try:
+            # In Lambda, don't specify credentials explicitly - use the execution role
+            self.client = boto3.client(
+                "cognito-idp",
+                region_name=settings.cognito_region or settings.aws_region,
+            )
+            self.user_pool_id = settings.cognito_user_pool_id
+            self.client_id = settings.cognito_client_id
+            self.client_secret = settings.cognito_client_secret
+
+            print(f"✅ Cognito client initialized successfully")
+            print(f"🔍 User Pool ID: {self.user_pool_id}")
+            print(f"🔍 Client ID: {self.client_id}")
+            print(f"🔍 Region: {settings.cognito_region or settings.aws_region}")
+
+        except Exception as e:
+            print(f"❌ Error initializing Cognito client: {e}")
+            raise
+
+    def check_user_exists(self, username: str) -> bool:
+        """
+        Check if a user already exists in Cognito.
+
+        Args:
+            username: The username or email to check
+
+        Returns:
+            True if user exists, False otherwise
+        """
+        try:
+            self.client.admin_get_user(UserPoolId=self.user_pool_id, Username=username)
+            print(f"✅ User already exists: {username}")
+            return True
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "UserNotFoundException":
+                print(f"✅ User does not exist: {username}")
+                return False
+            else:
+                print(f"❌ Error checking user existence: {e}")
+                # If there's an error, assume user doesn't exist to allow registration
+                return False
 
     def authenticate_user(
         self, username: str, password: str
@@ -257,6 +289,28 @@ class CognitoService:
             print(f"❌ Error message: {e.response['Error']['Message']}")
             return False
 
+    def disable_user(self, username: str) -> bool:
+        """
+        Disable a user account in Cognito.
+
+        Args:
+            username: The username or email
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            self.client.admin_disable_user(
+                UserPoolId=self.user_pool_id, Username=username
+            )
+            print(f"✅ User disabled: {username}")
+            return True
+        except ClientError as e:
+            print(f"❌ Disable user error: {e}")
+            print(f"❌ Error code: {e.response['Error']['Code']}")
+            print(f"❌ Error message: {e.response['Error']['Message']}")
+            return False
+
     def confirm_forgot_password(
         self, username: str, confirmation_code: str, new_password: str
     ) -> bool:
@@ -343,6 +397,196 @@ class CognitoService:
         ).digest()
 
         return base64.b64encode(dig).decode()
+
+    def list_users(
+        self,
+        limit: int = 10,
+        pagination_token: Optional[str] = None,
+        filter_expression: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        List users in the Cognito User Pool with pagination and filtering.
+
+        Args:
+            limit: Maximum number of users to return
+            pagination_token: Token for pagination
+            filter_expression: Filter expression for users
+
+        Returns:
+            List of users or None if failed
+        """
+        try:
+            params = {"UserPoolId": self.user_pool_id, "Limit": limit}
+
+            if pagination_token:
+                params["PaginationToken"] = pagination_token
+
+            if filter_expression:
+                params["Filter"] = filter_expression
+
+            response = self.client.list_users(**params)
+
+            return response
+        except ClientError as e:
+            print(f"❌ Error listing users: {e}")
+            return None
+
+    def list_all_users(self) -> Optional[Dict[str, Any]]:
+        """
+        List ALL users in the Cognito User Pool by handling pagination automatically.
+
+        Returns:
+            All users combined or None if failed
+        """
+        try:
+            print(f"🔍 Starting list_all_users with UserPoolId: {self.user_pool_id}")
+
+            all_users = []
+            pagination_token = None
+
+            while True:
+                params = {
+                    "UserPoolId": self.user_pool_id,
+                    "Limit": 60,  # Maximum allowed by Cognito
+                }
+
+                if pagination_token:
+                    params["PaginationToken"] = pagination_token
+
+                print(f"🔍 Calling list_users with params: {params}")
+                response = self.client.list_users(**params)
+
+                if not response or "Users" not in response:
+                    print(f"🔍 No response or no Users in response")
+                    break
+
+                users = response.get("Users", [])
+                all_users.extend(users)
+                print(f"🔍 Retrieved {len(users)} users, total so far: {len(all_users)}")
+
+                # Check if there are more pages
+                pagination_token = response.get("PaginationToken")
+                if not pagination_token:
+                    print(f"🔍 No more pages, finished pagination")
+                    break
+
+            print(f"✅ Total users retrieved: {len(all_users)}")
+            return {"Users": all_users}
+
+        except ClientError as e:
+            print(f"❌ Error listing all users: {e}")
+            print(f"❌ Error code: {e.response['Error']['Code']}")
+            print(f"❌ Error message: {e.response['Error']['Message']}")
+            return None
+        except Exception as e:
+            print(f"❌ Unexpected error in list_all_users: {type(e).__name__}: {e}")
+            return None
+
+    def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get user information by user ID using admin privileges.
+
+        Args:
+            user_id: The Cognito User ID
+
+        Returns:
+            User information or None if failed
+        """
+        try:
+            response = self.client.admin_get_user(
+                UserPoolId=self.user_pool_id, Username=user_id
+            )
+            return response
+        except ClientError as e:
+            print(f"❌ Error getting user by ID: {e}")
+            return None
+
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """
+        Get user information by email using admin privileges.
+
+        Args:
+            email: The user's email address
+
+        Returns:
+            User information or None if failed
+        """
+        try:
+            response = self.client.admin_get_user(
+                UserPoolId=self.user_pool_id, Username=email
+            )
+            print(f"🔍 Get user by email response: {response}")
+            return response
+        except ClientError as e:
+            print(f"❌ Error getting user by email: {e}")
+            return None
+
+    def update_user_attributes(self, user_id: str, attributes: Dict[str, str]) -> bool:
+        """
+        Update user attributes using admin privileges.
+
+        Args:
+            user_id: The Cognito User ID
+            attributes: Dictionary of attributes to update
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            user_attributes = []
+            for key, value in attributes.items():
+                user_attributes.append({"Name": key, "Value": value})
+
+            self.client.admin_update_user_attributes(
+                UserPoolId=self.user_pool_id,
+                Username=user_id,
+                UserAttributes=user_attributes,
+            )
+            print(f"✅ User attributes updated successfully for: {user_id}")
+            return True
+        except ClientError as e:
+            print(f"❌ Error updating user attributes: {e}")
+            return False
+
+    def enable_user(self, user_id: str) -> bool:
+        """
+        Enable a user account.
+
+        Args:
+            user_id: The Cognito User ID
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            self.client.admin_enable_user(
+                UserPoolId=self.user_pool_id, Username=user_id
+            )
+            print(f"✅ User enabled successfully: {user_id}")
+            return True
+        except ClientError as e:
+            print(f"❌ Error enabling user: {e}")
+            return False
+
+    def delete_user(self, user_id: str) -> bool:
+        """
+        Delete a user account.
+
+        Args:
+            user_id: The Cognito User ID
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            self.client.admin_delete_user(
+                UserPoolId=self.user_pool_id, Username=user_id
+            )
+            print(f"✅ User deleted successfully: {user_id}")
+            return True
+        except ClientError as e:
+            print(f"❌ Error deleting user: {e}")
+            return False
 
 
 # Global Cognito service instance

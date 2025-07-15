@@ -144,13 +144,13 @@ class MailgunService:
         Returns:
             True if successful, False otherwise
         """
-        subject = "Welcome to Urbex!"
+        subject = "Bienvenido a Urbex!"
         html_content = f"""
         <html>
         <body>
-            <h1>Welcome to Urbex, {username}!</h1>
-            <p>Thank you for joining our community. We're excited to have you on board!</p>
-            <p>Best regards,<br>The Urbex Team</p>
+            <h1>Bienvenido a Urbex, {username}!</h1>
+            <p>Gracias por unirte a nuestra comunidad. ¡Estamos emocionados de tenerte a bordo!</p>
+            <p>Saludos,<br>El equipo de Urbex</p>
         </body>
         </html>
         """
@@ -174,18 +174,18 @@ class MailgunService:
         Returns:
             True if successful, False otherwise
         """
-        subject = "Password Reset Request"
+        subject = "Solicitud de restablecimiento de contraseña"
         reset_url = f"https://your-app.com/reset-password?token={reset_token}"
 
         html_content = f"""
         <html>
         <body>
-            <h1>Password Reset Request</h1>
-            <p>You requested a password reset for your Urbex account.</p>
-            <p>Click the link below to reset your password:</p>
-            <a href="{reset_url}">Reset Password</a>
-            <p>If you didn't request this, please ignore this email.</p>
-            <p>Best regards,<br>The Urbex Team</p>
+            <h1>Solicitud de restablecimiento de contraseña</h1>
+            <p>Has solicitado un restablecimiento de contraseña para tu cuenta de Urbex.</p>
+            <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+            <a href="{reset_url}">Restablecer contraseña</a>
+            <p>Si no solicitaste este restablecimiento, por favor ignora este correo.</p>
+            <p>Saludos,<br>El equipo de Urbex</p>
         </body>
         </html>
         """
@@ -209,15 +209,15 @@ class MailgunService:
         Returns:
             True if successful, False otherwise
         """
-        subject = "Email Verification"
+        subject = "Verificación de correo electrónico"
 
         html_content = f"""
         <html>
         <body>
-            <h1>Email Verification</h1>
-            <p>Please verify your email address by entering this code:</p>
+            <h1>Verificación de correo electrónico</h1>
+            <p>Por favor, verifica tu dirección de correo electrónico ingresando este código:</p>
             <h2>{verification_code}</h2>
-            <p>This code will expire in 24 hours.</p>
+            <p>Este código expirará en 24 horas.</p>
             <p>Best regards,<br>The Urbex Team</p>
         </body>
         </html>

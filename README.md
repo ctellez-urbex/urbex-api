@@ -365,6 +365,129 @@ Content-Type: application/json
 }
 ```
 
+### Admin Endpoints
+
+#### List Users
+```http
+POST /api/v1/admin/users
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "filter": "john",
+  "pagination": 1
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Users retrieved successfully",
+  "data": {
+    "users": [
+      {
+        "username": "john@example.com",
+        "email": "john@example.com",
+        "emailVerified": true,
+        "status": "ENABLED",
+        "createdAt": "2024-01-15T10:30:00Z"
+      }
+    ]
+  }
+}
+```
+
+#### Get User Details
+```http
+GET /api/v1/admin/users/{user_id}
+Authorization: Bearer <admin_token>
+```
+
+**Response:**
+```json
+{
+  "user_id": "user-123",
+  "email": "john@example.com",
+  "first_name": "John",
+  "last_name": "Doe",
+  "phone_number": "+1234567890",
+  "plan": "mensual",
+  "su": "1",
+  "status": "ENABLED",
+  "email_verified": true,
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+#### Update User
+```http
+PUT /api/v1/admin/users/{user_id}
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "first_name": "John Updated",
+  "last_name": "Doe Updated",
+  "phone_number": "+1234567890",
+  "plan": "anual",
+  "su": "1"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User updated successfully",
+  "data": {
+    "user_id": "user-123",
+    "updated_attributes": ["given_name", "family_name", "phone_number", "custom:plan", "custom:su"]
+  }
+}
+```
+
+#### Update User Status
+```http
+PATCH /api/v1/admin/users/{user_id}/status
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "status": "DISABLED"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User status updated to DISABLED",
+  "data": {
+    "user_id": "user-123",
+    "status": "DISABLED"
+  }
+}
+```
+
+#### Delete User
+```http
+DELETE /api/v1/admin/users/{user_id}
+Authorization: Bearer <admin_token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User deleted successfully",
+  "data": {
+    "user_id": "user-123"
+  }
+}
+```
+
 ### Health Check
 
 ```http

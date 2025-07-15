@@ -94,9 +94,22 @@ async def register_user(user_data: UserRegister) -> AuthResponse:
     Returns:
         Registration response
     """
-    print(f"🔍 Register endpoint called with username: {user_data.username}")
+    print(f"🔍 Register endpoint called with email: {user_data.email}")
 
-    # Prepare user attributes
+    # 1. Validate that email doesn't already exist in Cognito
+    try:
+        print(f"🔍 Checking if user already exists: {user_data.email}")
+        user_exists = cognito_service.check_user_exists(user_data.email)
+        if user_exists:
+            return AuthResponse(
+                success=False,
+                message="User with this email already exists. Please use a different email or try logging in.",
+            )
+    except Exception as e:
+        print(f"⚠️ Warning: Could not verify user existence: {e}")
+        # Continue with registration if we can't verify
+
+    # 2. Prepare user attributes including custom fields
     attributes = {}
     if user_data.first_name:
         attributes["given_name"] = user_data.first_name
@@ -104,15 +117,22 @@ async def register_user(user_data: UserRegister) -> AuthResponse:
         attributes["family_name"] = user_data.last_name
     if user_data.email:
         attributes["email"] = user_data.email
+    if user_data.phone_number:
+        attributes["phone_number"] = user_data.phone_number
+    if user_data.plan:
+        attributes["custom:plan"] = user_data.plan
+
+    # Always set custom:su to "1" for new registrations
+    attributes["custom:su"] = "1"
 
     print(f"🔍 Prepared attributes: {attributes}")
 
-    # Register user with Cognito
+    # 3. Register user with Cognito
     result = None
     try:
         print("🔍 Calling cognito_service.register_user...")
         result = cognito_service.register_user(
-            username=user_data.username,
+            username=user_data.email,  # Use email as username for consistency
             email=user_data.email,
             password=user_data.password,
             attributes=attributes,
@@ -121,6 +141,19 @@ async def register_user(user_data: UserRegister) -> AuthResponse:
     except Exception as e:
         print(f"❌ Registration exception: {e}")
         print(f"❌ Exception type: {type(e).__name__}")
+
+        # Handle specific Cognito errors
+        if "UsernameExistsException" in str(e):
+            return AuthResponse(
+                success=False,
+                message="User with this email already exists. Please use a different email or try logging in.",
+            )
+        elif "InvalidPasswordException" in str(e):
+            return AuthResponse(
+                success=False,
+                message="Password does not meet requirements. Please use a stronger password.",
+            )
+
         # Only unexpected errors are 500
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -133,11 +166,11 @@ async def register_user(user_data: UserRegister) -> AuthResponse:
             detail="Failed to register user",
         )
 
-    # Send welcome email (don't fail if email fails)
+    # 4. Send welcome email (don't fail if email fails)
     try:
         print("🔍 Sending welcome email...")
         email_sent = mailgun_service.send_welcome_email(
-            user_data.email, user_data.username
+            user_data.email, user_data.email
         )
         print(f"🔍 Welcome email sent: {email_sent}")
     except Exception as e:
@@ -147,14 +180,14 @@ async def register_user(user_data: UserRegister) -> AuthResponse:
     return AuthResponse(
         success=True,
         message="User registered successfully. Please check your email for confirmation.",
-        data={"username": user_data.username},
+        data={"email": user_data.email, "plan": user_data.plan, "su": "1"},
     )
 
 
 @router.post("/confirm", response_model=AuthResponse)
 async def confirm_registration(confirm_data: UserConfirm) -> AuthResponse:
     """
-    Confirm user registration with verification code.
+    Confirm user registration with verification code and disable account.
 
     Args:
         confirm_data: Confirmation data
@@ -164,10 +197,25 @@ async def confirm_registration(confirm_data: UserConfirm) -> AuthResponse:
     """
     success = None
     try:
+        # 1. Confirm the registration
         success = cognito_service.confirm_registration(
             username=confirm_data.username,
             confirmation_code=confirm_data.confirmation_code,
         )
+
+        if success:
+            # 2. Disable the user account after successful confirmation
+            print(
+                f"🔍 Disabling user account after confirmation: {confirm_data.username}"
+            )
+            disable_success = cognito_service.disable_user(confirm_data.username)
+
+            if not disable_success:
+                print(
+                    f"⚠️ Warning: Could not disable user account: {confirm_data.username}"
+                )
+                # Don't fail the confirmation if disable fails
+
     except Exception as e:
         # Only unexpected errors are 500
         raise HTTPException(
@@ -183,7 +231,7 @@ async def confirm_registration(confirm_data: UserConfirm) -> AuthResponse:
 
     return AuthResponse(
         success=True,
-        message="User confirmed successfully",
+        message="User confirmed successfully. Account is now disabled and requires admin approval.",
         data={"username": confirm_data.username},
     )
 

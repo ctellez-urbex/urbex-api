@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from mangum import Mangum
 
-from app.api.v1 import auth, contact
+from app.api.v1 import admin, auth, contact
 from app.core.config import settings
 
 
@@ -83,6 +83,7 @@ def create_app() -> FastAPI:
     # Include API routes
     app.include_router(auth.router, prefix="/api/v1")
     app.include_router(contact.router, prefix="/api/v1")
+    app.include_router(admin.router, prefix="/api/v1")
 
     # Health check endpoint
     @app.get("/health")

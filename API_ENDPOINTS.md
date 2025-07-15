@@ -35,6 +35,16 @@ This document describes all available API endpoints for the Urbex API.
 |--------|----------|-------------|---------------|
 | POST | `/api/v1/contact` | Submit contact form | No |
 
+### Admin Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/v1/admin/users` | List users with pagination and filters | Yes (Admin) |
+| GET | `/api/v1/admin/users/{user_id}` | Get user details | Yes (Admin) |
+| PUT | `/api/v1/admin/users/{user_id}` | Update user information | Yes (Admin) |
+| PATCH | `/api/v1/admin/users/{user_id}/status` | Enable/disable user | Yes (Admin) |
+| DELETE | `/api/v1/admin/users/{user_id}` | Delete user account | Yes (Admin) |
+
 ## 🔐 Authentication
 
 ### Public Endpoints
@@ -50,6 +60,14 @@ These endpoints don't require authentication:
 These endpoints require a valid Bearer token:
 - `/api/v1/auth/me` - Get user info
 - `/api/v1/auth/logout` - User logout
+
+### Admin Endpoints
+These endpoints require admin privileges (Bearer token with admin role):
+- `/api/v1/admin/users` - List all users
+- `/api/v1/admin/users/{user_id}` - Get specific user details
+- `/api/v1/admin/users/{user_id}` - Update user information
+- `/api/v1/admin/users/{user_id}/status` - Change user status
+- `/api/v1/admin/users/{user_id}` - Delete user account
 
 ## 📝 Request Examples
 
@@ -92,6 +110,55 @@ curl -X POST "http://localhost:8000/api/v1/contact" \
     "phone": "+1234567890",
     "message": "I would like to know more about your services."
   }'
+```
+
+### Admin Endpoints
+
+#### List Users
+```bash
+curl -X POST "http://localhost:8000/api/v1/admin/users" \
+  -H "Authorization: Bearer ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "filter": "john",
+    "pagination": 1
+  }'
+```
+
+#### Get User Details
+```bash
+curl -X GET "http://localhost:8000/api/v1/admin/users/user-123" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+#### Update User
+```bash
+curl -X PUT "http://localhost:8000/api/v1/admin/users/user-123" \
+  -H "Authorization: Bearer ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "first_name": "John Updated",
+    "last_name": "Doe Updated",
+    "phone_number": "+1234567890",
+    "plan": "Anual",
+    "su": "1"
+  }'
+```
+
+#### Update User Status
+```bash
+curl -X PATCH "http://localhost:8000/api/v1/admin/users/user-123/status" \
+  -H "Authorization: Bearer ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "DISABLED"
+  }'
+```
+
+#### Delete User
+```bash
+curl -X DELETE "http://localhost:8000/api/v1/admin/users/user-123" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
 ```
 
 ## 🚀 Testing
