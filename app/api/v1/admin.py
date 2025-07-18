@@ -28,7 +28,6 @@ def _parse_user_attributes(user_attributes: list) -> Dict[str, Any]:
     for attr in user_attributes:
         name = attr.get("Name", "")
         value = attr.get("Value", "")
-        print(f"🔍 Debug: Attribute - Name: '{name}', Value: '{value}'")
         if name == "email":
             attributes["email"] = value
         elif name == "given_name":
@@ -73,7 +72,6 @@ def _filter_users_by_search(users: list, search: str) -> list:
 
         # Get raw attributes directly from Cognito response
         raw_attributes = user.get("Attributes", [])
-        print(f"🔍 Debug: Raw attributes: {raw_attributes}")
 
         # Extract values from raw attributes
         email = ""
@@ -141,11 +139,9 @@ async def list_users(
 
         # Filter users by search term
         filtered_users = _filter_users_by_search(response.get("Users", []), search)
-
         users = []
         for user in filtered_users:
             attributes = _parse_user_attributes(user.get("Attributes", []))
-
             # Create user object with exact fields requested
             user_data = {
                 "user_id": attributes.get("user_id", ""),
@@ -164,6 +160,7 @@ async def list_users(
                 "lastLogin": user.get("UserLastModifiedDate", "").isoformat()
                 if user.get("UserLastModifiedDate")
                 else None,
+                "enabled": user.get("Enabled", False),
             }
             users.append(user_data)
 
@@ -214,6 +211,7 @@ async def get_user(
             "lastLogin": response.get("UserLastModifiedDate", "").isoformat()
             if response.get("UserLastModifiedDate")
             else None,
+            "enabled": response.get("Enabled", False),
         }
 
         return {
@@ -315,4 +313,29 @@ async def update_user_status(
         raise
     except Exception as e:
         print(f"❌ Error in update_user_status: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.delete("/user/{user_id}", response_model=AdminResponse)
+async def delete_user(
+    user_id: str,
+    current_user: Dict[str, Any] = Depends(verify_admin_token),
+):
+    """
+    Delete a user.
+    """
+    try:
+        success = cognito_service.delete_user(user_id)
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to delete user")
+
+        return AdminResponse(
+            success=True,
+            message="User deleted successfully",
+            data={"user_id": user_id},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error in delete_user: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")

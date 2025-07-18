@@ -41,7 +41,7 @@ async def submit_contact_form(contact_data: ContactForm) -> ContactResponse:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Admin email not configured",
             )
-
+        print(f"🔍 Contact data: {contact_data}")
         # Enviar email de contacto
         success = mailgun_service.send_contact_form_email(
             full_name=contact_data.full_name,
@@ -61,7 +61,7 @@ async def submit_contact_form(contact_data: ContactForm) -> ContactResponse:
             success=True,
             message="Mensaje enviado exitosamente. Te responderemos pronto.",
             data={
-                "name": contact_data.name,
+                "name": contact_data.full_name,
                 "email": contact_data.email,
                 "timestamp": datetime.now().isoformat(),
             },

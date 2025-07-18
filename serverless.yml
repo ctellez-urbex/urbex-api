@@ -114,6 +114,11 @@ functions:
           method: PUT
           cors: true
           private: true
+      - http:
+          path: /api/v1/admin/user/{user_id}
+          method: DELETE
+          cors: true
+          private: true
 
 plugins:
   - serverless-python-requirements

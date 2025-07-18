@@ -51,6 +51,7 @@ class UserInfo(BaseModel):
     email_verified: bool = Field(description="Whether email is verified")
     created_at: Optional[str] = Field(default=None, description="User creation date")
     updated_at: Optional[str] = Field(default=None, description="Last update date")
+    enabled: bool = Field(description="Whether user is enabled")
 
 
 class UserListResponse(BaseModel):
